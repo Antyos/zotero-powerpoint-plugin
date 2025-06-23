@@ -12,7 +12,7 @@ PowerPoint add-ins are integrations built by third parties into PowerPoint by us
 ### Run the add-in using Office Add-ins Development Kit extension
 
 1. **Open the Office Add-ins Development Kit**
-    
+
     In the **Activity Bar**, select the **Office Add-ins Development Kit** icon to open the extension.
 
 1. **Preview Your Office Add-in (F5)**
@@ -70,3 +70,126 @@ Copyright (c) 2024 Microsoft Corporation. All rights reserved.
 ## Disclaimer
 
 **THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.**
+
+# Zotero PowerPoint Integration Add-in
+
+This PowerPoint add-in integrates with Zotero to allow citation insertion directly into PowerPoint slides, modeled after the official Zotero Word integration but adapted for the Office.js/PowerPoint environment.
+
+## Features
+
+- **Citation Insertion**: Insert citations from Zotero into PowerPoint slides
+- **Multiple Communication Methods**: Supports both Better BibTeX HTTP API and Zotero integration service protocols
+- **Field Management**: Stores citation metadata similar to the Word integration
+- **Diagnostic Tools**: Built-in connection testing and troubleshooting
+
+## Prerequisites
+
+- **Zotero**: Install the latest version of [Zotero](https://www.zotero.org/download/)
+- **Better BibTeX Plugin**: Install the [Better BibTeX plugin](https://retorque.re/zotero-better-bibtex/) for Zotero
+- **Node.js**: Latest LTS version from [nodejs.org](https://nodejs.org/)
+- **Office 365**: PowerPoint with Office.js support
+
+## Setup Instructions
+
+### 1. Install Zotero Components
+
+1. **Install Zotero** from [zotero.org](https://www.zotero.org/download/)
+2. **Install Better BibTeX plugin**:
+   - Download the latest `.xpi` file from [Better BibTeX releases](https://github.com/retorque-re/zotero-better-bibtex/releases)
+   - In Zotero: Tools → Add-ons → Install Add-on From File
+   - Select the downloaded `.xpi` file
+   - Restart Zotero
+
+### 2. Configure Zotero
+
+1. **Enable Better BibTeX**:
+   - Go to Zotero Preferences → Better BibTeX
+   - Ensure "Enable export by HTTP" is checked
+   - Note the port (default: 23119)
+
+2. **Test Zotero Connection**:
+   - Open a web browser
+   - Visit: `http://127.0.0.1:23119/better-bibtex/cayw?probe=true`
+   - Should return "ready" if working correctly
+
+### 3. Install and Run the Add-in
+
+1. Clone or download this repository
+2. Open terminal in the project directory
+3. Run: `npm install`
+4. Run: `npm run build:dev`
+5. Run: `npm start` to start the development server
+
+## Using the Add-in
+
+### Insert Citations
+
+1. **Start Zotero** and ensure it's running
+2. **Open PowerPoint** with the add-in loaded
+3. **Select a slide** where you want to insert a citation
+4. **Click "Insert Citation"** button in the Zotero Integration ribbon
+5. **Select items** in the Zotero picker dialog that opens
+6. **Citation will be inserted** as a formatted text box on your slide
+
+### Test Connection
+
+Use the **"Test Connection"** button to diagnose connectivity issues:
+
+- Tests Better BibTeX availability
+- Tests Zotero integration service
+- Shows detailed connection status
+- Displays test results directly in your slide
+
+## Troubleshooting
+
+### "Citation selection cancelled or no items selected"
+
+This error typically indicates connection issues with Zotero:
+
+1. **Check Zotero is Running**:
+   - Ensure Zotero application is open and running
+   - Check system tray for Zotero icon
+
+2. **Verify Better BibTeX**:
+   - In Zotero: Help → Check for Updates
+   - Ensure Better BibTeX is installed and enabled
+   - Test the URL: `http://127.0.0.1:23119/better-bibtex/cayw?probe=true`
+
+3. **Use Test Connection**:
+   - Click the "Test Connection" button in PowerPoint
+   - Review the diagnostic information shown
+   - Common issues:
+     - Port 23119 blocked by firewall
+     - Better BibTeX not installed
+     - Zotero not running
+
+4. **Check Browser Console**:
+   - Press F12 in the add-in
+   - Look for error messages in the console
+   - Network errors indicate connectivity issues
+
+5. **Firewall/Antivirus**:
+   - Ensure localhost connections on port 23119 are allowed
+   - Some security software blocks local HTTP requests
+
+### Common Solutions
+
+- **Restart Zotero**: Close and reopen Zotero completely
+- **Reinstall Better BibTeX**: Remove and reinstall the plugin
+- **Check Port**: Verify port 23119 is available (netstat -an | findstr 23119)
+- **Try Different Port**: Configure Zotero to use a different port
+
+## Technical Implementation
+
+This add-in attempts to replicate the Word integration's approach within Office.js constraints:
+
+- **No Direct DLL Access**: Office.js sandbox prevents loading `libzoteroWinWordIntegration.dll`
+- **HTTP Communication**: Uses HTTP APIs instead of OLE Automation
+- **Field Simulation**: Stores citation metadata in PowerPoint shapes and document settings
+- **Multiple Protocols**: Tries Better BibTeX, integration service, and JSON-RPC methods
+
+### Communication Methods (in order of preference)
+
+1. **Better BibTeX CAYW**: `http://127.0.0.1:23119/better-bibtex/cayw`
+2. **Integration Service**: `http://127.0.0.1:23119/integration/`
+3. **JSON-RPC**: `http://127.0.0.1:23119/integration/json-rpc`

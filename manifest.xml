@@ -59,6 +59,36 @@
                     <SourceLocation resid="Taskpane.Url" />
                   </Action>
                 </Control>
+                <Control xsi:type="Button" id="ZoteroButton">
+                  <Label resid="ZoteroButton.Label" />
+                  <Supertip>
+                    <Title resid="ZoteroButton.Label" />
+                    <Description resid="ZoteroButton.Tooltip" />
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16x16" />
+                    <bt:Image size="32" resid="Icon.32x32" />
+                    <bt:Image size="80" resid="Icon.80x80" />
+                  </Icon>
+                  <Action xsi:type="ExecuteFunction">
+                    <FunctionName>insertZoteroCitation</FunctionName>
+                  </Action>
+                </Control>
+                <Control xsi:type="Button" id="ZoteroTestButton">
+                  <Label resid="ZoteroTestButton.Label" />
+                  <Supertip>
+                    <Title resid="ZoteroTestButton.Label" />
+                    <Description resid="ZoteroTestButton.Tooltip" />
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16x16" />
+                    <bt:Image size="32" resid="Icon.32x32" />
+                    <bt:Image size="80" resid="Icon.80x80" />
+                  </Icon>
+                  <Action xsi:type="ExecuteFunction">
+                    <FunctionName>testZoteroConnection</FunctionName>
+                  </Action>
+                </Control>
 
               </Group>
             </OfficeTab>
@@ -80,13 +110,19 @@
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="GetStarted.Title" DefaultValue="Get started with your sample add-in!" />
-        <bt:String id="CommandsGroup.Label" DefaultValue="Commands Group" />
+        <bt:String id="CommandsGroup.Label" DefaultValue="Zotero Integration" />
         <bt:String id="TaskpaneButton.Label" DefaultValue="Show Task Pane" />
+        <bt:String id="ZoteroButton.Label" DefaultValue="Insert Citation" />
+        <bt:String id="ZoteroTestButton.Label" DefaultValue="Test Connection" />
       </bt:ShortStrings>
       <bt:LongStrings>
         <bt:String id="GetStarted.Description"
           DefaultValue="Your sample add-in loaded successfully. Go to the HOME tab and click the 'Show Task Pane' button to get started." />
         <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Click to Show a Taskpane" />
+        <bt:String id="ZoteroButton.Tooltip"
+          DefaultValue="Insert a citation from Zotero into the current slide" />
+        <bt:String id="ZoteroTestButton.Tooltip"
+          DefaultValue="Test connection to Zotero and show diagnostic information" />
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>
