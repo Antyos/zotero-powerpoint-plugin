@@ -115,42 +115,65 @@ export class ZoteroBBTConnector {
     return ZoteroBBTConnector.instance;
   }
   private get bbtBaseUrl(): string {
-    return `https://127.0.0.1:${this.bbtPort}/better-bibtex`;
+    return `http://127.0.0.1:${this.bbtPort}/better-bibtex`;
   }
-  
   /**
    * Check if Better BibTeX is available and ready
+   * NOTE: This will likely fail due to Chrome security headers that BBT rejects
    */
   async checkConnection(): Promise<boolean> {
     try {
       console.log('Checking Better BibTeX connection...');
+      console.log('NOTE: This will likely fail due to Office.js localhost restrictions');
+      
+      // Create custom headers that are more likely to work in Office.js
+      const customHeaders = {
+        'X-Custom-Client': 'ZoteroPowerPointIntegration',
+        'X-Client-Version': '1.0',
+        'X-Integration-Type': 'PowerPoint-BBT',
+        'Accept': 'text/plain',
+        'X-Requested-With': 'XMLHttpRequest',
+      };
+      
+      // Log what we're trying to send
+      console.log('Attempting to send headers:', customHeaders);
       
       const response = await fetch(`${this.bbtBaseUrl}/cayw?probe=true`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': 'ZoteroPowerPointIntegration/1.0',
-          Accept: 'application/json',
-          Connection: 'keep-alive',
-        },
-        
+        headers: customHeaders,
+        // mode: 'cors', // Use cors mode for more accurate error reporting
       });
-      console.log(response);
+      
+      // Log the actual request headers that were sent (if possible)
+      console.log('Response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        type: response.type,
+        headers: {
+          'content-type': response.headers.get('content-type'),
+          'content-length': response.headers.get('content-length')
+        }
+      });
 
       if (response.ok) {
         const result = await response.text();
         this.isConnected = result.trim() === 'ready';
         console.log(`Better BibTeX status: ${this.isConnected ? 'ready' : 'not ready'}`);
+        console.log('Response text:', result);
         return this.isConnected;
+      } else {
+        this.isConnected = false;
+        return false;
       }
-      this.isConnected = false;
-      return false;
     } catch (error) {
-      console.error('Error checking Better BibTeX connection:', error);
+      console.error('Error checking Better BibTeX connection (EXPECTED in Office.js):', error);
+      console.log('This error is expected - Office.js blocks localhost requests for security');
       this.isConnected = false;
       return false;
     }
   }
+
 
   /**
    * Get all libraries from Zotero
@@ -201,12 +224,12 @@ export class ZoteroBBTConnector {
 
       if (libraryId !== undefined) {
         searchParams.append('library', libraryId.toString());
-      }
-
-      const response = await fetch(`${this.bbtBaseUrl}/search?${searchParams}`, {
+      }      const response = await fetch(`${this.bbtBaseUrl}/search?${searchParams}`, {
         method: 'GET',
         headers: {
-          'User-Agent': 'ZoteroPowerPointIntegration/1.0'
+          'Accept': 'application/json',
+          'X-Requested-With': 'ZoteroPowerPointIntegration',
+          'X-Client-Version': '1.0'
         }
       });
 
@@ -242,7 +265,9 @@ export class ZoteroBBTConnector {
       const response = await fetch(`${this.bbtBaseUrl}/cayw?${params}`, {
         method: 'GET',
         headers: {
-          'User-Agent': 'ZoteroPowerPointIntegration/1.0'
+          'Accept': 'text/plain',
+          'X-Requested-With': 'ZoteroPowerPointIntegration',
+          'X-Client-Version': '1.0'
         }
       });
 
@@ -280,11 +305,12 @@ export class ZoteroBBTConnector {
         style: style,
         citekeys: citationKeys.join(',')
       });
-
       const response = await fetch(`${this.bbtBaseUrl}/cayw?${params}`, {
         method: 'GET',
         headers: {
-          'User-Agent': 'ZoteroPowerPointIntegration/1.0'
+          'Accept': 'text/plain',
+          'X-Requested-With': 'ZoteroPowerPointIntegration',
+          'X-Client-Version': '1.0'
         }
       });
 
@@ -543,7 +569,70 @@ export class ZoteroBBTConnector {
     return results;
   }
 
-  async openInZotero(citekey: string): Promise<void> {
-    // Open `zotero://select/items/bbt/${citekey}`
+
+
+  /**
+   * Debug method to test header behavior in Office.js environment
+   */
+  async debugHeaders(): Promise<{
+    requestAttempt: any;
+    responseHeaders: any;
+    userAgentIssue: string;
+  }> {
+    try {
+      console.log('=== DEBUGGING HEADERS ===');
+      
+      // Test what happens when we try to set various headers
+      const testHeaders = {
+        // 'User-Agent': 'ZoteroPowerPointIntegration/1.0',
+        'X-Custom-Client': 'ZoteroPowerPointIntegration',
+        'X-Client-Version': '1.0',
+        'X-Integration-Type': 'PowerPoint-BBT',
+        'Accept': 'text/plain',
+        'X-Requested-With': 'XMLHttpRequest',
+        "Allow-Control-Allow-Origin": "*",
+        "Sec-Fetch-Site": "none",
+      };
+      
+      console.log('Attempting to send these headers:', testHeaders);
+      
+      const response = await fetch(`${this.bbtBaseUrl}/cayw?probe=true`, {
+        method: 'GET',
+        headers: testHeaders,
+        mode: "no-cors",
+      });
+        // Collect response headers (Office.js compatible way)
+      const responseHeaders: any = {};
+      const commonHeaders = ['content-type', 'content-length', 'server', 'date', 'cache-control', 'connection'];
+      commonHeaders.forEach(header => {
+        const value = response.headers.get(header);
+        if (value) {
+          responseHeaders[header] = value;
+        }
+      });
+      
+      const result = {
+        requestAttempt: {
+          url: `${this.bbtBaseUrl}/cayw?probe=true`,
+          method: 'GET',
+          intendedHeaders: testHeaders,
+          status: response.status,
+          statusText: response.statusText
+        },
+        responseHeaders,
+        userAgentIssue: 'Browsers typically override User-Agent header for security. Office.js may further restrict headers. Use X-Custom-* headers instead.'
+      };
+      
+      console.log('Header debug results:', result);
+      return result;
+      
+    } catch (error) {
+      console.error('Header debug failed:', error);
+      return {
+        requestAttempt: { error: error.message },
+        responseHeaders: {},
+        userAgentIssue: `Debug failed: ${error.message}`
+      };
+    }
   }
 }

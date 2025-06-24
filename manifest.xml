@@ -15,6 +15,7 @@
   <SupportUrl DefaultValue="https://www.contoso.com/help" />
   <AppDomains>
     <AppDomain>https://www.contoso.com</AppDomain>
+    <AppDomain>https://127.0.0.1:23119</AppDomain>
   </AppDomains>
   <Hosts>
     <Host Name="Presentation" />
@@ -59,11 +60,11 @@
                     <SourceLocation resid="Taskpane.Url" />
                   </Action>
                 </Control>
-                <Control xsi:type="Button" id="ZoteroButton">
-                  <Label resid="ZoteroButton.Label" />
+                <Control xsi:type="Button" id="ZoteroInsertCitation">
+                  <Label resid="ZoteroInsertCitation.Label" />
                   <Supertip>
-                    <Title resid="ZoteroButton.Label" />
-                    <Description resid="ZoteroButton.Tooltip" />
+                    <Title resid="ZoteroInsertCitation.Label" />
+                    <Description resid="ZoteroInsertCitation.Tooltip" />
                   </Supertip>
                   <Icon>
                     <bt:Image size="16" resid="Icon.16x16" />
@@ -112,14 +113,14 @@
         <bt:String id="GetStarted.Title" DefaultValue="Get started with your sample add-in!" />
         <bt:String id="CommandsGroup.Label" DefaultValue="Zotero Integration" />
         <bt:String id="TaskpaneButton.Label" DefaultValue="Show Task Pane" />
-        <bt:String id="ZoteroButton.Label" DefaultValue="Insert Citation" />
+        <bt:String id="ZoteroInsertCitation.Label" DefaultValue="Insert Citation" />
         <bt:String id="ZoteroTestButton.Label" DefaultValue="Test Connection" />
       </bt:ShortStrings>
       <bt:LongStrings>
         <bt:String id="GetStarted.Description"
           DefaultValue="Your sample add-in loaded successfully. Go to the HOME tab and click the 'Show Task Pane' button to get started." />
         <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Click to Show a Taskpane" />
-        <bt:String id="ZoteroButton.Tooltip"
+        <bt:String id="ZoteroInsertCitation.Tooltip"
           DefaultValue="Insert a citation from Zotero into the current slide" />
         <bt:String id="ZoteroTestButton.Tooltip"
           DefaultValue="Test connection to Zotero and show diagnostic information" />
