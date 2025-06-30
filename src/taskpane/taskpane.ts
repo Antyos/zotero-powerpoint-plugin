@@ -7,9 +7,18 @@
 
 Office.onReady((info) => {
   if (info.host === Office.HostType.PowerPoint) {
-    document.getElementById("sideload-msg").style.display = "none";
-    document.getElementById("app-body").style.display = "flex";
-    document.getElementById("run").onclick = run;
+    const sideloadMsg = document.getElementById("sideload-msg");
+    if (sideloadMsg){
+      sideloadMsg.style.display = "none";
+    }
+    const appBody = document.getElementById("app-body");
+    if (appBody) {
+      appBody.style.display = "flex";
+    }
+    const runButton = document.getElementById("run");
+    if (runButton) {
+      runButton.onclick = run;
+    }
   }
 });
 
