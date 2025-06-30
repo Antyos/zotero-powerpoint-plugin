@@ -9,6 +9,7 @@ import { ZoteroLibrary } from '../zotero/zotero-connector';
 Office.onReady(() => {
   const zotero = ZoteroLibrary.getInstance();
   zotero.loadConfig();
+  // zotero.updateConfig({apiKey: "ie7sTgek6mfDDq1T8un9tTtf", userId: 11539091});
   // If needed, Office.js is ready to be called.
 });
 
@@ -106,8 +107,33 @@ function testZoteroConnection(event: Office.AddinCommands.Event) {
 }
 
 /**
- * Test headers and display results
+ * Open Zotero configuration dialog
+ * @param event
  */
+function openZoteroConfig(event: Office.AddinCommands.Event) {
+  return PowerPoint.run(async (context) => {
+    try {
+      console.log('Opening Zotero configuration dialog...');
+      const zotero = ZoteroLibrary.getInstance();
+      
+      const configured = await zotero.configureFromDialog();
+      
+      if (configured) {
+        console.log('Zotero configuration completed successfully');
+      } else {
+        console.log('Zotero configuration was cancelled');
+      }
+      
+      event.completed();
+      
+    } catch (error) {
+      console.error("Error opening Zotero configuration:", error);
+      event.completed();
+    }
+  });
+}
+
 // Register the functions with Office.
 Office.actions.associate("insertZoteroCitation", insertZoteroCitation);
 Office.actions.associate("testZoteroConnection", testZoteroConnection);
+Office.actions.associate("openZoteroConfig", openZoteroConfig);

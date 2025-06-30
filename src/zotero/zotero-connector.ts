@@ -3,7 +3,7 @@
  * Based on obsidian-zotero-integration BBT implementation
  */
 
-import api, { ZoteroApi } from "zotero-api-client";
+import api, { SingleReadResponse, ZoteroApi, RequestOptions } from "zotero-api-client";
 
 interface ZoteroField {
   id: string;
@@ -58,11 +58,11 @@ export class ZoteroLibrary {
     try {
       const client = ZoteroLibrary.getClient();
       const collections = await client.collections().get();
-      console.log('Zotero collections:', collections);
+      console.log('Checking connection... Collections:', collections);
       this.isConnected = true;
       return true;
     } catch (error) {
-      console.error('Error checking Better BibTeX connection:', error);
+      console.error('Error checking Zotero connection:', error);
       this.isConnected = false;
       return false;
     }
@@ -121,8 +121,6 @@ export class ZoteroLibrary {
       } else {
         console.log('No Zotero settings found, using defaults');
       }
-      
-      console.log(`Loaded Zotero settings.`);
     } catch (error) {
       console.error('Error loading Zotero settings:', error);
       // Don't throw error - we can work without stored settings
@@ -137,4 +135,138 @@ export class ZoteroLibrary {
     return typeof apiKey === 'string' && apiKey.length > 0 && /^[A-Za-z0-9]+$/.test(apiKey);
   }
 
+
+  public async getItems(opts?: RequestOptions): Promise<ZoteroField[]> {
+    try {
+      const response = await ZoteroLibrary.getClient().items().get(opts);
+      const itemData = response instanceof SingleReadResponse ? [response.getData()] : response.getData();
+      console.log('Fetched Zotero items:', itemData);
+      return itemData.map(item => ({
+        id: item.key,
+        citationKey: item.data?.extra || '',
+        formattedText: item.data?.title || '',
+        shapeId: ''
+      }));
+    }
+    catch (error) {
+      console.error('Error getting Zotero items:', error);
+      throw new Error(`Failed to get items: ${error}`);
+    }
+  }
+
+  /**
+   * Get current configuration (excluding sensitive data like API key)
+   */
+  getConfig(): Omit<ZoteroConfig, 'apiKey'> & { hasApiKey: boolean } {
+    return {
+      userId: this.config?.userId || 0,
+      userType: this.config?.userType || 'user',
+      hasApiKey: !!(this.config?.apiKey)
+    };
+  }
+
+  /**
+   * Check if configuration is complete
+   */
+  isConfigured(): boolean {
+    return !!(this.config?.apiKey && this.config?.userId);
+  }
+
+  /**
+   * Open configuration dialog
+   */
+  async openConfigDialog(): Promise<ZoteroConfig | null> {
+    return new Promise((resolve, reject) => {
+      try {
+        const dialogUrl = window.location.origin + '/config-dialog.html';
+        console.log('Opening configuration dialog at:', dialogUrl);
+        
+        Office.context.ui.displayDialogAsync(
+          dialogUrl,
+          { height: 70, width: 50 },
+          (result) => {
+            if (result.status === Office.AsyncResultStatus.Failed) {
+              console.error('Failed to open dialog:', result.error);
+              reject(new Error(`Failed to open dialog: ${result.error.message}`));
+              return;
+            }
+            
+            const dialog = result.value;
+            
+            // Handle messages from the dialog
+            dialog.addEventHandler(Office.EventType.DialogMessageReceived, (args) => {
+              try {
+                const messageArgs = args as { message: string; origin: string | undefined; };
+                const message = JSON.parse(messageArgs.message);
+                console.log('Dialog message received:', message);
+                
+                if (message.type === 'config-saved') {
+                  // Update configuration with new data
+                  this.updateConfig(message.config).then(() => {
+                    dialog.close();
+                    resolve(message.config);
+                  }).catch((error) => {
+                    dialog.close();
+                    reject(error);
+                  });
+                } else if (message.type === 'config-cancelled') {
+                  dialog.close();
+                  resolve(null);
+                } else if (message.type === 'config-error') {
+                  dialog.close();
+                  reject(new Error(message.error));
+                }
+              } catch (error) {
+                console.error('Error parsing dialog message:', error);
+                dialog.close();
+                reject(new Error('Invalid message from dialog'));
+              }
+            });
+            
+            // Handle dialog closed event
+            dialog.addEventHandler(Office.EventType.DialogEventReceived, (args) => {
+              const eventArgs = args as { error: number; };
+              console.log('Dialog event received:', eventArgs.error);
+              if (eventArgs.error === 12006) { // Dialog closed by user
+                resolve(null);
+              } else {
+                reject(new Error(`Dialog error: ${eventArgs.error}`));
+              }
+            });
+          }
+        );
+      } catch (error) {
+        console.error('Error opening config dialog:', error);
+        reject(new Error(`Failed to open configuration dialog: ${error}`));
+      }
+    });
+  }
+
+  /**
+   * Open configuration dialog and handle the result
+   */
+  async configureFromDialog(): Promise<boolean> {
+    try {
+      const result = await this.openConfigDialog();
+      return result !== null; // Returns true if config was saved, false if cancelled
+    } catch (error) {
+      console.error('Configuration dialog failed:', error);
+      return false;
+    }
+  }
+}
+
+// Make ZoteroLibrary available globally for debugging
+declare global {
+  interface Window {
+    ZoteroLibrary: typeof ZoteroLibrary;
+    zotero: ZoteroLibrary;
+  }
+}
+
+// Expose to global scope for REPL debugging
+if (typeof window !== 'undefined') {
+  window.ZoteroLibrary = ZoteroLibrary;
+  // Also expose the singleton instance for easy access
+  window.zotero = ZoteroLibrary.getInstance();
 }

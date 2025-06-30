@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zotero Configuration</title>
+    
+    <!-- Office JavaScript API -->
+    <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+    
+    <!-- Fluent UI CSS -->
+    <link rel="stylesheet" href="https://res-1.cdn.office.net/files/fabric-cdn-prod_20230815.002/office-ui-fabric-core/11.1.0/css/fabric.min.css">
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f3f2f1;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        
+        .dialog-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 24px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        .dialog-header {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #edebe9;
+            padding-bottom: 16px;
+        }
+        
+        .dialog-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #323130;
+            margin: 0;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #323130;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #605e5c;
+            border-radius: 2px;
+            font-size: 14px;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #0078d4;
+            box-shadow: 0 0 0 1px #0078d4;
+        }
+        
+        .form-select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #605e5c;
+            border-radius: 2px;
+            font-size: 14px;
+            box-sizing: border-box;
+            background-color: white;
+        }
+        
+        .form-select:focus {
+            outline: none;
+            border-color: #0078d4;
+            box-shadow: 0 0 0 1px #0078d4;
+        }
+        
+        .button-group {
+            display: flex;
+            margin-left: auto;
+            margin-right: 0;
+            margin-top: 24px;
+            border-top: 1px solid #edebe9;
+            padding-top: 16px;
+        }
+        
+        .button-group .btn {
+            margin-left: 8px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 2px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .btn-primary {
+            background-color: #0078d4;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #106ebe;
+        }
+        
+        .btn-secondary {
+            background-color: #f3f2f1;
+            color: #323130;
+            border: 1px solid #8a8886;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #edebe9;
+        }
+        
+        .error-message {
+            color: #d13438;
+            font-size: 12px;
+            margin-top: 4px;
+            display: none;
+        }
+        
+        .help-text {
+            font-size: 12px;
+            color: #605e5c;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dialog-container">
+        <div class="dialog-header">
+            <h2 class="dialog-title">Zotero Configuration</h2>
+        </div>
+        
+        <form id="configForm">
+            <div class="form-group">
+                <label class="form-label" for="apiKey">API Key *</label>
+                <input type="password" id="apiKey" class="form-input" placeholder="Enter your Zotero API key" required>
+                <div class="help-text">Get your API key from <a href="https://www.zotero.org/settings/keys" target="_blank" rel="noopener noreferrer">Zotero Settings</a></div>
+                <div class="error-message" id="apiKeyError"></div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="userId">User ID *</label>
+                <input type="number" id="userId" class="form-input" placeholder="Enter your Zotero User ID" required>
+                <div class="help-text">Find your User ID in your Zotero profile URL</div>
+                <div class="error-message" id="userIdError"></div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="userType">User Type</label>
+                <select id="userType" class="form-select">
+                    <option value="user">User</option>
+                    <option value="group">Group</option>
+                </select>
+                <div class="help-text">Select "User" for personal library, "Group" for group library</div>
+            </div>
+            
+            <div class="button-group">
+                <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="saveBtn">Save Configuration</button>
+            </div>
+        </form>
+    </div>
+    
+    <script>
+        // Initialize when Office.js is ready
+        Office.onReady((info) => {
+            console.log('Office.js ready in config dialog');
+            
+            // Load current configuration if available
+            loadCurrentConfig();
+            
+            // Set up event listeners
+            setupEventListeners();
+        });
+        
+        function loadCurrentConfig() {
+            try {
+                // Try to get current config from localStorage
+                const partitionKey = Office.context.partitionKey || "default";
+                const settingsJson = localStorage.getItem(`${partitionKey}-zotero-settings`);
+                
+                if (settingsJson) {
+                    const config = JSON.parse(settingsJson);
+                    
+                    // Populate form fields (except API key for security)
+                    if (config.userId) {
+                        document.getElementById('userId').value = config.userId;
+                    }
+                    if (config.userType) {
+                        document.getElementById('userType').value = config.userType;
+                    }
+                    
+                    console.log('Current config loaded into form');
+                }
+            } catch (error) {
+                console.error('Error loading current config:', error);
+            }
+        }
+        
+        function setupEventListeners() {
+            const form = document.getElementById('configForm');
+            const cancelBtn = document.getElementById('cancelBtn');
+            
+            // Form submission
+            form.addEventListener('submit', handleSubmit);
+            
+            // Cancel button
+            cancelBtn.addEventListener('click', handleCancel);
+            
+            // Input validation
+            document.getElementById('apiKey').addEventListener('input', validateApiKey);
+            document.getElementById('userId').addEventListener('input', validateUserId);
+        }
+        
+        function validateApiKey() {
+            const apiKey = document.getElementById('apiKey').value;
+            const errorElement = document.getElementById('apiKeyError');
+            
+            if (!apiKey) {
+                showError(errorElement, 'API Key is required');
+                return false;
+            }
+            
+            if (apiKey.length < 10) {
+                showError(errorElement, 'API Key seems too short');
+                return false;
+            }
+            
+            if (!/^[A-Za-z0-9]+$/.test(apiKey)) {
+                showError(errorElement, 'API Key should contain only letters and numbers');
+                return false;
+            }
+            
+            hideError(errorElement);
+            return true;
+        }
+        
+        function validateUserId() {
+            const userId = document.getElementById('userId').value;
+            const errorElement = document.getElementById('userIdError');
+            
+            if (!userId) {
+                showError(errorElement, 'User ID is required');
+                return false;
+            }
+            
+            if (isNaN(userId) || parseInt(userId) <= 0) {
+                showError(errorElement, 'User ID must be a positive number');
+                return false;
+            }
+            
+            hideError(errorElement);
+            return true;
+        }
+        
+        function showError(element, message) {
+            element.textContent = message;
+            element.style.display = 'block';
+        }
+        
+        function hideError(element) {
+            element.style.display = 'none';
+        }
+        
+        function handleSubmit(event) {
+            event.preventDefault();
+            
+            // Validate all fields
+            const isApiKeyValid = validateApiKey();
+            const isUserIdValid = validateUserId();
+            
+            if (!isApiKeyValid || !isUserIdValid) {
+                return;
+            }
+            
+            // Get form values
+            const apiKey = document.getElementById('apiKey').value;
+            const userId = parseInt(document.getElementById('userId').value);
+            const userType = document.getElementById('userType').value;
+            
+            try {
+                // Send configuration to parent window via Office.js dialog messaging
+                Office.context.ui.messageParent(JSON.stringify({
+                    type: 'config-saved',
+                    config: {
+                        apiKey: apiKey,
+                        userId: userId,
+                        userType: userType
+                    }
+                }));
+                
+                console.log('Configuration sent to parent');
+                
+            } catch (error) {
+                console.error('Error sending configuration:', error);
+                
+                // Send error message to parent
+                try {
+                    Office.context.ui.messageParent(JSON.stringify({
+                        type: 'config-error',
+                        error: error.message
+                    }));
+                } catch (msgError) {
+                    console.error('Error sending error message:', msgError);
+                }
+            }
+        }
+        
+        function handleCancel() {
+            try {
+                // Send cancel message to parent
+                Office.context.ui.messageParent(JSON.stringify({
+                    type: 'config-cancelled'
+                }));
+                
+                console.log('Cancel message sent to parent');
+                
+            } catch (error) {
+                console.error('Error sending cancel message:', error);
+            }
+        }
+    </script>
+</body>
+</html>

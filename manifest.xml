@@ -90,7 +90,21 @@
                     <FunctionName>testZoteroConnection</FunctionName>
                   </Action>
                 </Control>
-
+                <Control xsi:type="Button" id="ZoteroConfigButton">
+                  <Label resid="ZoteroConfig.Label" />
+                  <Supertip>
+                    <Title resid="ZoteroConfig.Label" />
+                    <Description resid="ZoteroConfig.Tooltip" />
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16x16" />
+                    <bt:Image size="32" resid="Icon.32x32" />
+                    <bt:Image size="80" resid="Icon.80x80" />
+                  </Icon>
+                  <Action xsi:type="ExecuteFunction">
+                    <FunctionName>openZoteroConfig</FunctionName>
+                  </Action>
+                </Control>
               </Group>
             </OfficeTab>
           </ExtensionPoint>
@@ -115,6 +129,7 @@
         <bt:String id="TaskpaneButton.Label" DefaultValue="Show Task Pane" />
         <bt:String id="ZoteroInsertCitation.Label" DefaultValue="Insert Citation" />
         <bt:String id="ZoteroTestButton.Label" DefaultValue="Test Connection" />
+        <bt:String id="ZoteroConfig.Label" DefaultValue="Configure Zotero" />
       </bt:ShortStrings>
       <bt:LongStrings>
         <bt:String id="GetStarted.Description"
@@ -124,6 +139,8 @@
           DefaultValue="Insert a citation from Zotero into the current slide" />
         <bt:String id="ZoteroTestButton.Tooltip"
           DefaultValue="Test connection to Zotero and show diagnostic information" />
+        <bt:String id="ZoteroConfig.Tooltip"
+          DefaultValue="Open the Zotero configuration dialog to set up your API key and user ID" />
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>
