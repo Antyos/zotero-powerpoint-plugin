@@ -218,7 +218,7 @@ declare module 'zotero-api-client' {
     getData(): any;
     getLinks(): any;
     getMeta(): any;
-    getVersion(): number;
+    getVersion(): number | undefined;
   }
 
   /**
@@ -308,7 +308,7 @@ declare module 'zotero-api-client' {
   */
   export class PretendResponse extends ApiResponse {
     getResponseType(): 'PretendResponse';
-    getVersion(): null;
+    getVersion(): undefined;
   }
 
   /**
