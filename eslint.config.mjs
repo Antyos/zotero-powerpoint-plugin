@@ -16,6 +16,11 @@ export default defineConfig([
       sourceType: "module",
       globals: {
         ...globals.browser,
+        // Standard web API types used in TypeScript declarations. I'm not sure
+        // why we need to manually add these.
+        RequestMode: "readonly",
+        RequestCache: "readonly",
+        RequestCredentials: "readonly",
 
         // Office.js globals
         Office: "readonly",
@@ -27,8 +32,7 @@ export default defineConfig([
     },
     rules: {
       "no-console": "off",
-      // Allow unused variables that start with underscore
-      "no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+      // Not adding a rule for regular "no-unused-vars" seems to get the job done.
       // Override TypeScript ESLint no-unused-vars rule
       "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
     },
