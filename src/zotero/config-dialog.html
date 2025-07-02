@@ -167,9 +167,13 @@
           />
           <div class="help-text">
             Get your API key from
-            <a href="https://www.zotero.org/settings/keys" target="_blank" rel="noopener noreferrer"
+            <a
+              href="https://www.zotero.org/settings/keys/new"
+              target="_blank"
+              rel="noopener noreferrer"
               >Zotero Settings</a
-            >
+            >. Make sure to select the <strong>Allow Library Access</strong>. Paste the key here.
+            permission.
           </div>
           <div class="error-message" id="apiKeyError"></div>
         </div>
@@ -183,7 +187,15 @@
             placeholder="Enter your Zotero User ID"
             required
           />
-          <div class="help-text">Find your User ID in your Zotero profile URL</div>
+          <div class="help-text">
+            Find your User ID in your
+            <a
+              href="https://www.zotero.org/settings/security#applications"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Zotero settings > Applications</a
+            >.
+          </div>
           <div class="error-message" id="userIdError"></div>
         </div>
 
