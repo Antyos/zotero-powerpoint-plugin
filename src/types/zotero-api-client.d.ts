@@ -1,19 +1,19 @@
 /**
  * TypeScript definitions for zotero-api-client
- * 
+ *
  * This module provides a lightweight, minimalistic Zotero API client
  * developed in JavaScript with support for both Node and browser environments.
- * 
+ *
  * @see https://github.com/tnajdek/zotero-api-client
  * @version 0.47.0
  */
 
 // ==================== ZOTERO DATA TYPES ====================
 
-declare module 'zotero-api-client' {
+declare module "zotero-api-client" {
   /**
-  * Zotero Creator
-  */
+   * Zotero Creator
+   */
   export interface ZoteroCreator {
     creatorType: string;
     firstName?: string;
@@ -22,8 +22,8 @@ declare module 'zotero-api-client' {
   }
 
   /**
-  * Zotero Tag
-  */
+   * Zotero Tag
+   */
   export interface ZoteroTag {
     tag: string;
     type?: number; // 0 for automatic, 1 for manual
@@ -31,13 +31,13 @@ declare module 'zotero-api-client' {
   }
 
   /**
-  * Zotero Item Type
-  */
+   * Zotero Item Type
+   */
   export interface ZoteroItem {
     key: string;
     version: number;
     library: {
-      type: 'user' | 'group';
+      type: "user" | "group";
       id: number;
       name: string;
       links: Record<string, any>;
@@ -94,13 +94,13 @@ declare module 'zotero-api-client' {
   }
 
   /**
-  * Zotero Collection
-  */
+   * Zotero Collection
+   */
   export interface ZoteroCollection {
     key: string;
     version: number;
     library: {
-      type: 'user' | 'group';
+      type: "user" | "group";
       id: number;
       name: string;
       links: Record<string, any>;
@@ -117,8 +117,8 @@ declare module 'zotero-api-client' {
   }
 
   /**
-  * Zotero Group
-  */
+   * Zotero Group
+   */
   export interface ZoteroGroup {
     id: number;
     version: number;
@@ -131,23 +131,23 @@ declare module 'zotero-api-client' {
       description: string;
       url: string;
       hasImage: boolean;
-      type: 'Private' | 'PublicOpen' | 'PublicClosed';
-      libraryEditing: 'members' | 'admins';
-      libraryReading: 'all' | 'members';
-      fileEditing: 'none' | 'members' | 'admins';
+      type: "Private" | "PublicOpen" | "PublicClosed";
+      libraryEditing: "members" | "admins";
+      libraryReading: "all" | "members";
+      fileEditing: "none" | "members" | "admins";
       admins: Array<{ id: number; username: string; name: string }>;
       members: Array<{ id: number; username: string; name: string }>;
     };
   }
 
   /**
-  * Zotero Search
-  */
+   * Zotero Search
+   */
   export interface ZoteroSearch {
     key: string;
     version: number;
     library: {
-      type: 'user' | 'group';
+      type: "user" | "group";
       id: number;
       name: string;
       links: Record<string, any>;
@@ -167,32 +167,32 @@ declare module 'zotero-api-client' {
   }
 
   /**
-  * Item Type Information
-  */
+   * Item Type Information
+   */
   export interface ItemType {
     itemType: string;
     localized: string;
   }
 
   /**
-  * Item Field Information
-  */
+   * Item Field Information
+   */
   export interface ItemField {
     field: string;
     localized: string;
   }
 
   /**
-  * Creator Field Information
-  */
+   * Creator Field Information
+   */
   export interface CreatorField {
     field: string;
     localized: string;
   }
 
   /**
-  * Item Type Field Information
-  */
+   * Item Type Field Information
+   */
   export interface ItemTypeField {
     field: string;
     localized: string;
@@ -200,8 +200,8 @@ declare module 'zotero-api-client' {
   }
 
   /**
-  * Creator Type Information
-  */
+   * Creator Type Information
+   */
   export interface CreatorType {
     creatorType: string;
     localized: string;
@@ -211,8 +211,8 @@ declare module 'zotero-api-client' {
   // ==================== API RESPONSE TYPES ====================
 
   /**
-  * Base API Response
-  */
+   * Base API Response
+   */
   export abstract class ApiResponse {
     getResponseType(): string;
     getData(): any;
@@ -222,18 +222,18 @@ declare module 'zotero-api-client' {
   }
 
   /**
-  * Single Read Response
-  */
+   * Single Read Response
+   */
   export class SingleReadResponse extends ApiResponse {
-    getResponseType(): 'SingleReadResponse';
+    getResponseType(): "SingleReadResponse";
     getData(): ZoteroItem | ZoteroCollection | ZoteroGroup | ZoteroSearch | any;
   }
 
   /**
-  * Multi Read Response
-  */
+   * Multi Read Response
+   */
   export class MultiReadResponse extends ApiResponse {
-    getResponseType(): 'MultiReadResponse';
+    getResponseType(): "MultiReadResponse";
     getData(): Array<ZoteroItem | ZoteroCollection | ZoteroGroup | ZoteroSearch | any>;
     getLinks(): any[];
     getMeta(): any[];
@@ -242,39 +242,41 @@ declare module 'zotero-api-client' {
   }
 
   /**
-  * Single Write Response
-  */
+   * Single Write Response
+   */
   export class SingleWriteResponse extends ApiResponse {
-    getResponseType(): 'SingleWriteResponse';
+    getResponseType(): "SingleWriteResponse";
     getData(): ZoteroItem | ZoteroCollection | ZoteroGroup | ZoteroSearch | any;
   }
 
   /**
-  * Multi Write Response
-  */
+   * Multi Write Response
+   */
   export class MultiWriteResponse extends ApiResponse {
-    getResponseType(): 'MultiWriteResponse';
+    getResponseType(): "MultiWriteResponse";
     isSuccess(): boolean;
     getData(): Array<ZoteroItem | ZoteroCollection | ZoteroGroup | ZoteroSearch | any>;
     getLinks(): any;
     getMeta(): any;
     getErrors(): Record<string, any>;
     getEntityByKey(key: string): ZoteroItem | ZoteroCollection | ZoteroGroup | ZoteroSearch | any;
-    getEntityByIndex(index: number): ZoteroItem | ZoteroCollection | ZoteroGroup | ZoteroSearch | any;
+    getEntityByIndex(
+      index: number
+    ): ZoteroItem | ZoteroCollection | ZoteroGroup | ZoteroSearch | any;
   }
 
   /**
-  * Delete Response
-  */
+   * Delete Response
+   */
   export class DeleteResponse extends ApiResponse {
-    getResponseType(): 'DeleteResponse';
+    getResponseType(): "DeleteResponse";
   }
 
   /**
-  * File Upload Response
-  */
+   * File Upload Response
+   */
   export class FileUploadResponse extends ApiResponse {
-    getResponseType(): 'FileUploadResponse';
+    getResponseType(): "FileUploadResponse";
     authResponse: any;
     response: any; // alias for authResponse
     uploadResponse: any;
@@ -283,51 +285,51 @@ declare module 'zotero-api-client' {
   }
 
   /**
-  * File Download Response
-  */
+   * File Download Response
+   */
   export class FileDownloadResponse extends ApiResponse {
-    getResponseType(): 'FileDownloadResponse';
+    getResponseType(): "FileDownloadResponse";
   }
 
   /**
-  * File URL Response
-  */
+   * File URL Response
+   */
   export class FileUrlResponse extends ApiResponse {
-    getResponseType(): 'FileUrlResponse';
+    getResponseType(): "FileUrlResponse";
   }
 
   /**
-  * Raw API Response
-  */
+   * Raw API Response
+   */
   export class RawApiResponse extends ApiResponse {
-    getResponseType(): 'RawApiResponse';
+    getResponseType(): "RawApiResponse";
   }
 
   /**
-  * Pretend Response
-  */
+   * Pretend Response
+   */
   export class PretendResponse extends ApiResponse {
-    getResponseType(): 'PretendResponse';
+    getResponseType(): "PretendResponse";
     getVersion(): undefined;
   }
 
   /**
-  * Error Response
-  */
+   * Error Response
+   */
   export class ErrorResponse extends Error {
     response: any;
     message: string;
     reason: string;
     options: any;
     getVersion(): number;
-    getResponseType(): 'ErrorResponse';
+    getResponseType(): "ErrorResponse";
   }
 
   // ==================== API CONFIGURATION ====================
 
   /**
-  * Request Options
-  */
+   * Request Options
+   */
   export interface RequestOptions {
     // API Configuration
     apiScheme?: string;
@@ -342,23 +344,56 @@ declare module 'zotero-api-client' {
     // Query Parameters
     collectionKey?: string;
     content?: string;
-    direction?: 'asc' | 'desc';
-    format?: 'atom' | 'bib' | 'json' | 'keys' | 'versions' | 'bibtex' | 'bookmarks' | 'coins' | 'csljson' | 'mods' | 'refer' | 'rdf_bibliontology' | 'rdf_dc' | 'rdf_zotero' | 'ris' | 'tei' | 'wikipedia';
+    direction?: "asc" | "desc";
+    format?:
+      | "atom"
+      | "bib"
+      | "json"
+      | "keys"
+      | "versions"
+      | "bibtex"
+      | "bookmarks"
+      | "coins"
+      | "csljson"
+      | "mods"
+      | "refer"
+      | "rdf_bibliontology"
+      | "rdf_dc"
+      | "rdf_zotero"
+      | "ris"
+      | "tei"
+      | "wikipedia";
     include?: string;
     includeTrashed?: boolean;
     itemKey?: string;
     itemQ?: string;
-    itemQMode?: 'titleCreatorYear' | 'everything';
+    itemQMode?: "titleCreatorYear" | "everything";
     itemTag?: string | string[];
     itemType?: string;
     limit?: number;
     linkMode?: string;
     locale?: string;
     q?: string;
-    qmode?: 'titleCreatorYear' | 'everything';
+    qmode?: "titleCreatorYear" | "everything";
     searchKey?: string;
     since?: number;
-    sort?: 'dateAdded' | 'dateModified' | 'title' | 'creator' | 'type' | 'date' | 'publisher' | 'publicationTitle' | 'journalAbbreviation' | 'language' | 'accessDate' | 'libraryCatalog' | 'callNumber' | 'rights' | 'addedBy' | 'numItems';
+    sort?:
+      | "dateAdded"
+      | "dateModified"
+      | "title"
+      | "creator"
+      | "type"
+      | "date"
+      | "publisher"
+      | "publicationTitle"
+      | "journalAbbreviation"
+      | "language"
+      | "accessDate"
+      | "libraryCatalog"
+      | "callNumber"
+      | "rights"
+      | "addedBy"
+      | "numItems";
     start?: number;
     style?: string;
     tag?: string | string[];
@@ -389,7 +424,7 @@ declare module 'zotero-api-client' {
     };
 
     // Fetch Options
-    method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+    method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
     body?: string;
     mode?: RequestMode;
     cache?: RequestCache;
@@ -399,13 +434,13 @@ declare module 'zotero-api-client' {
   // ==================== API INTERFACE ====================
 
   /**
-  * Main API Interface
-  */
+   * Main API Interface
+   */
   export interface ZoteroApi {
     // Configuration Methods
     (key?: string, opts?: RequestOptions): ZoteroApi;
-    library(typeOrKey?: 'user' | 'group' | string, id?: number): ZoteroApi;
-    
+    library(typeOrKey?: "user" | "group" | string, id?: number): ZoteroApi;
+
     // Resource Methods
     items(itemKey?: string): ZoteroApi;
     collections(collectionKey?: string): ZoteroApi;
@@ -414,7 +449,7 @@ declare module 'zotero-api-client' {
     tags(tagName?: string): ZoteroApi;
     settings(settingKey?: string): ZoteroApi;
     groups(): ZoteroApi;
-    
+
     // Metadata Methods
     itemTypes(): ZoteroApi;
     itemFields(): ZoteroApi;
@@ -423,7 +458,7 @@ declare module 'zotero-api-client' {
     itemTypeFields(itemType: string): ZoteroApi;
     itemTypeCreatorTypes(itemType: string): ZoteroApi;
     template(itemType: string, subType?: string): ZoteroApi;
-    
+
     // Modifier Methods
     top(): ZoteroApi;
     trash(): ZoteroApi;
@@ -431,36 +466,52 @@ declare module 'zotero-api-client' {
     publications(): ZoteroApi;
     deleted(): ZoteroApi;
     version(version: number): ZoteroApi;
-    
+
     // File Methods
-    attachment(fileName?: string, file?: ArrayBuffer, mtime?: number, md5sum?: string, patch?: ArrayBuffer, algorithm?: 'xdelta' | 'vcdiff' | 'bsdiff'): ZoteroApi;
-    registerAttachment(fileName: string, fileSize: number, mtime: number, md5sum: string): ZoteroApi;
+    attachment(
+      fileName?: string,
+      file?: ArrayBuffer,
+      mtime?: number,
+      md5sum?: string,
+      patch?: ArrayBuffer,
+      algorithm?: "xdelta" | "vcdiff" | "bsdiff"
+    ): ZoteroApi;
+    registerAttachment(
+      fileName: string,
+      fileSize: number,
+      mtime: number,
+      md5sum: string
+    ): ZoteroApi;
     attachmentUrl(): ZoteroApi;
-    
+
     // Utility Methods
     verifyKeyAccess(): ZoteroApi;
     getConfig(): RequestOptions;
     use(extend: (api: ZoteroApi) => ZoteroApi): ZoteroApi;
-    
+
     // Execution Methods
     get(opts?: RequestOptions): Promise<SingleReadResponse | MultiReadResponse>;
     post(data: any[], opts?: RequestOptions): Promise<MultiWriteResponse>;
     put(data: any, opts?: RequestOptions): Promise<SingleWriteResponse>;
     patch(data: any, opts?: RequestOptions): Promise<SingleWriteResponse>;
     del(keysToDelete?: string[], opts?: RequestOptions): Promise<DeleteResponse>;
-    pretend(verb?: 'get' | 'post' | 'put' | 'patch' | 'delete', data?: any, opts?: RequestOptions): Promise<PretendResponse>;
+    pretend(
+      verb?: "get" | "post" | "put" | "patch" | "delete",
+      data?: any,
+      opts?: RequestOptions
+    ): Promise<PretendResponse>;
   }
 
   // ==================== EXPORT ====================
 
   /**
-  * Default export - the main API function
-  */
+   * Default export - the main API function
+   */
   const api: ZoteroApi;
   export default api;
 
   /**
-  * Request function (for advanced usage)
-  */
+   * Request function (for advanced usage)
+   */
   export function request(options: RequestOptions): Promise<ApiResponse>;
 }

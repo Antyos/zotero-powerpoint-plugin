@@ -8,7 +8,7 @@
 Office.onReady((info) => {
   if (info.host === Office.HostType.PowerPoint) {
     const sideloadMsg = document.getElementById("sideload-msg");
-    if (sideloadMsg){
+    if (sideloadMsg) {
       sideloadMsg.style.display = "none";
     }
     const appBody = document.getElementById("app-body");
