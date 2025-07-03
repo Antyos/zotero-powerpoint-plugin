@@ -11,6 +11,20 @@
 // ==================== ZOTERO DATA TYPES ====================
 
 declare module "zotero-api-client" {
+  export interface ZoteroLink {
+    href: string;
+    type: string;
+    attachmentType?: string;
+    attachmentSize?: number;
+  }
+
+  export interface ZoteroLibrary {
+    id: number;
+    type: "user" | "group";
+    name: string;
+    links: Record<string, ZoteroLink>;
+  }
+
   /**
    * Zotero Creator
    */
@@ -30,21 +44,55 @@ declare module "zotero-api-client" {
     numItems?: number;
   }
 
+  export interface ZoteroItemData {
+    key: string;
+    version: number;
+    itemType: string;
+    title: string;
+    creators: ZoteroCreator[];
+    abstractNote?: string;
+    publicationTitle?: string;
+    volume?: string;
+    issue?: string;
+    pages?: string;
+    date?: string;
+    series?: string;
+    seriesTitle?: string;
+    seriesText?: string;
+    journalAbbreviation?: string;
+    language?: string;
+    DOI?: string;
+    ISSN?: string;
+    shortTitle?: string;
+    url?: string;
+    accessDate?: string;
+    archive?: string;
+    archiveLocation?: string;
+    libraryCatalog?: string;
+    callNumber?: string;
+    rights?: string;
+    extra?: string;
+    tags: ZoteroTag[];
+    collections: string[];
+    relations: Record<string, string | string[]>;
+    dateAdded: string;
+    dateModified: string;
+    [key: string]: any; // Allow for additional item type specific fields
+  }
+
   /**
    * Zotero Item Type
    */
-  export interface ZoteroItem {
-    key: string;
+  export interface ZoteroItemRawResponse {
     version: number;
-    library: {
-      type: "user" | "group";
-      id: number;
-      name: string;
-      links: Record<string, any>;
-    };
+    key: string;
+    data: Array<ZoteroItemData & { version: number }>;
+    library: ZoteroLibrary;
     links: {
-      self: { href: string; type: string };
-      alternate: { href: string; type: string };
+      alternate: ZoteroLink;
+      attachment?: ZoteroLink;
+      self?: ZoteroLink;
+      [key: string]: ZoteroLink | undefined;
     };
     meta: {
       createdByUser?: {
@@ -53,43 +101,9 @@ declare module "zotero-api-client" {
         name: string;
       };
       creatorSummary: string;
-      parsedDate: string;
       numChildren: number;
-    };
-    data: {
-      key: string;
-      version: number;
-      itemType: string;
-      title: string;
-      creators: ZoteroCreator[];
-      abstractNote?: string;
-      publicationTitle?: string;
-      volume?: string;
-      issue?: string;
-      pages?: string;
-      date?: string;
-      series?: string;
-      seriesTitle?: string;
-      seriesText?: string;
-      journalAbbreviation?: string;
-      language?: string;
-      DOI?: string;
-      ISSN?: string;
-      shortTitle?: string;
-      url?: string;
-      accessDate?: string;
-      archive?: string;
-      archiveLocation?: string;
-      libraryCatalog?: string;
-      callNumber?: string;
-      rights?: string;
-      extra?: string;
-      tags: ZoteroTag[];
-      collections: string[];
-      relations: Record<string, string | string[]>;
-      dateAdded: string;
-      dateModified: string;
-      [key: string]: any; // Allow for additional item type specific fields
+      parsedDate: string;
+      [key: string]: unknown;
     };
   }
 
@@ -213,28 +227,34 @@ declare module "zotero-api-client" {
   /**
    * Base API Response
    */
-  export abstract class ApiResponse {
+  export interface ApiResponse {
     getResponseType(): string;
     getData(): any;
     getLinks(): any;
     getMeta(): any;
-    getVersion(): number | undefined;
+    getVersion(): number;
   }
 
   /**
    * Single Read Response
    */
-  export class SingleReadResponse extends ApiResponse {
+  export interface SingleReadResponse<R = unknown, T = unknown> extends ApiResponse {
+    options: RequestOptions;
+    raw: R;
+    response: Response;
     getResponseType(): "SingleReadResponse";
-    getData(): ZoteroItem | ZoteroCollection | ZoteroGroup | ZoteroSearch | any;
+    getData(): T;
   }
 
   /**
    * Multi Read Response
    */
-  export class MultiReadResponse extends ApiResponse {
+  export interface MultiReadResponse<R = unknown, T = unknown> extends ApiResponse {
+    options: RequestOptions;
+    raw: Array<R>;
+    response: Response;
     getResponseType(): "MultiReadResponse";
-    getData(): Array<ZoteroItem | ZoteroCollection | ZoteroGroup | ZoteroSearch | any>;
+    getData(): T[];
     getLinks(): any[];
     getMeta(): any[];
     getTotalResults(): string;
@@ -244,38 +264,36 @@ declare module "zotero-api-client" {
   /**
    * Single Write Response
    */
-  export class SingleWriteResponse extends ApiResponse {
+  export interface SingleWriteResponse<T = unknown> extends ApiResponse {
     getResponseType(): "SingleWriteResponse";
-    getData(): ZoteroItem | ZoteroCollection | ZoteroGroup | ZoteroSearch | any;
+    getData(): T;
   }
 
   /**
    * Multi Write Response
    */
-  export class MultiWriteResponse extends ApiResponse {
+  export interface MultiWriteResponse<T = unknown> extends ApiResponse {
     getResponseType(): "MultiWriteResponse";
     isSuccess(): boolean;
-    getData(): Array<ZoteroItem | ZoteroCollection | ZoteroGroup | ZoteroSearch | any>;
+    getData(): T[];
     getLinks(): any;
     getMeta(): any;
     getErrors(): Record<string, any>;
-    getEntityByKey(key: string): ZoteroItem | ZoteroCollection | ZoteroGroup | ZoteroSearch | any;
-    getEntityByIndex(
-      index: number
-    ): ZoteroItem | ZoteroCollection | ZoteroGroup | ZoteroSearch | any;
+    getEntityByKey(key: string): T;
+    getEntityByIndex(index: number): T;
   }
 
   /**
    * Delete Response
    */
-  export class DeleteResponse extends ApiResponse {
+  export interface DeleteResponse extends ApiResponse {
     getResponseType(): "DeleteResponse";
   }
 
   /**
    * File Upload Response
    */
-  export class FileUploadResponse extends ApiResponse {
+  export interface FileUploadResponse extends ApiResponse {
     getResponseType(): "FileUploadResponse";
     authResponse: any;
     response: any; // alias for authResponse
@@ -287,28 +305,28 @@ declare module "zotero-api-client" {
   /**
    * File Download Response
    */
-  export class FileDownloadResponse extends ApiResponse {
+  export interface FileDownloadResponse extends ApiResponse {
     getResponseType(): "FileDownloadResponse";
   }
 
   /**
    * File URL Response
    */
-  export class FileUrlResponse extends ApiResponse {
+  export interface FileUrlResponse extends ApiResponse {
     getResponseType(): "FileUrlResponse";
   }
 
   /**
    * Raw API Response
    */
-  export class RawApiResponse extends ApiResponse {
+  export interface RawApiResponse extends ApiResponse {
     getResponseType(): "RawApiResponse";
   }
 
   /**
    * Pretend Response
    */
-  export class PretendResponse extends ApiResponse {
+  export interface PretendResponse extends Omit<ApiResponse, "getVersion"> {
     getResponseType(): "PretendResponse";
     getVersion(): undefined;
   }
@@ -316,7 +334,7 @@ declare module "zotero-api-client" {
   /**
    * Error Response
    */
-  export class ErrorResponse extends Error {
+  export interface ErrorResponse extends Error {
     response: any;
     message: string;
     reason: string;
@@ -436,19 +454,20 @@ declare module "zotero-api-client" {
   /**
    * Main API Interface
    */
-  export interface ZoteroApi {
+  export interface ZoteroApi<R = unknown, T = unknown> {
     // Configuration Methods
     (key?: string, opts?: RequestOptions): ZoteroApi;
     library(typeOrKey?: "user" | "group" | string, id?: number): ZoteroApi;
 
     // Resource Methods
-    items(itemKey?: string): ZoteroApi;
-    collections(collectionKey?: string): ZoteroApi;
-    subcollections(): ZoteroApi;
-    searches(searchKey?: string): ZoteroApi;
-    tags(tagName?: string): ZoteroApi;
+    // If key is provided, returns a single item response, otherswise returns a multi-item response
+    items(itemKey?: string): ZoteroApi<ZoteroItemRawResponse, ZoteroItemData>;
+    collections(collectionKey?: string): ZoteroApi<ZoteroCollection>;
+    subcollections(): ZoteroApi<ZoteroCollection>;
+    searches(searchKey?: string): ZoteroApi<ZoteroSearch>;
+    tags(tagName?: string): ZoteroApi<ZoteroTag>;
     settings(settingKey?: string): ZoteroApi;
-    groups(): ZoteroApi;
+    groups(): ZoteroApi<ZoteroGroup>;
 
     // Metadata Methods
     itemTypes(): ZoteroApi;
@@ -490,10 +509,10 @@ declare module "zotero-api-client" {
     use(extend: (api: ZoteroApi) => ZoteroApi): ZoteroApi;
 
     // Execution Methods
-    get(opts?: RequestOptions): Promise<SingleReadResponse | MultiReadResponse>;
-    post(data: any[], opts?: RequestOptions): Promise<MultiWriteResponse>;
-    put(data: any, opts?: RequestOptions): Promise<SingleWriteResponse>;
-    patch(data: any, opts?: RequestOptions): Promise<SingleWriteResponse>;
+    get(opts?: RequestOptions): Promise<SingleReadResponse<R, T> | MultiReadResponse<R, T>>;
+    post(data: any[], opts?: RequestOptions): Promise<MultiWriteResponse<T>>;
+    put(data: any, opts?: RequestOptions): Promise<SingleWriteResponse<T>>;
+    patch(data: any, opts?: RequestOptions): Promise<SingleWriteResponse<T>>;
     del(keysToDelete?: string[], opts?: RequestOptions): Promise<DeleteResponse>;
     pretend(
       verb?: "get" | "post" | "put" | "patch" | "delete",
