@@ -10,6 +10,7 @@ import {
   debugSlideTags,
   getCitationsOnSlide,
   insertCitationOnSlide,
+  removeCitationFromSlide,
 } from "../zotero/slide-citations";
 
 Office.onReady((info) => {
@@ -44,6 +45,7 @@ function initializeZoteroUI() {
   const searchInput = document.getElementById("search-query");
   const debugSlideTagsButton = document.getElementById("debug-slide-tags");
   const debugCitationStoreButton = document.getElementById("debug-citation-store");
+  const debugCitationsButton = document.getElementById("debug-citations");
 
   if (configureButton) {
     configureButton.onclick = configureZotero;
@@ -58,7 +60,7 @@ function initializeZoteroUI() {
   }
 
   if (refreshCitationsButton) {
-    refreshCitationsButton.onclick = updateCurrentCitationsPanel;
+    refreshCitationsButton.onclick = updateCitationsPanel;
   }
 
   if (debugSlideTagsButton) {
@@ -66,6 +68,17 @@ function initializeZoteroUI() {
       debugSlideTags().catch((error) => {
         console.error("Error debugging slide tags:", error);
       });
+    };
+  }
+
+  if (debugCitationsButton) {
+    debugCitationsButton.onclick = async () => {
+      try {
+        console.log("Debugging citations...");
+        await CitationStore.getInstance().debugCitations();
+      } catch (error) {
+        console.error("Error debugging citations:", error);
+      }
     };
   }
 
@@ -103,7 +116,7 @@ function initializeZoteroUI() {
   }
 
   // Load current citations on initialization
-  updateCurrentCitationsPanel();
+  updateCitationsPanel();
 }
 
 async function configureZotero() {
@@ -202,11 +215,11 @@ async function insertCitation(citation: ZoteroItemData) {
     console.error("Citation insertion error:", error);
   }
   // Refresh the current citations list
-  setTimeout(updateCurrentCitationsPanel, 500);
+  setTimeout(updateCitationsPanel, 500);
 }
 (window as any).insertCitation = insertCitation;
 
-async function updateCurrentCitationsPanel() {
+async function updateCitationsPanel() {
   try {
     console.log("Loading current citations from slide...");
     await PowerPoint.run(async (_context) => {
@@ -234,13 +247,13 @@ function displayCitationsOnTaskpane(citations: ZoteroItemData[]) {
     .map((citation) => {
       return `
         <div class="ms-ListItem zotero-result-item citation-item"
-             data-citation-id="${citation.id}">
+             data-citation-id="${citation.key}">
           <div class="ms-font-m zotero-result-title">${citation.title}</div>
           <div class="ms-font-s zotero-result-meta">
-            ID: ${citation.id} | Author: ${citation.creators.map((c) => c.lastName).join(", ")} | Year: ${citation.date?.split("-")[0] ?? ""}
+            ID: ${citation.key} | Author: ${citation.creators.map((c) => c.lastName).join(", ")} | Year: ${citation.date?.split("-")[0] ?? ""}
           </div>
           <div class="citation-actions">
-            <button class="ms-Button ms-Button--small" onclick="removeCitation('${citation.id}')">
+            <button class="ms-Button ms-Button--small" onclick="removeCitation('${citation.key}')">
               <span class="ms-Button-label">Remove</span>
             </button>
           </div>
@@ -257,12 +270,12 @@ async function removeCitation(citationId: string) {
   try {
     console.log(`Removing citation: ${citationId}`);
 
-    const success = false; //await removeCitationSimple(citationId);
+    const success = await removeCitationFromSlide(citationId);
 
     if (success) {
       console.log("Citation removed successfully");
       // Refresh the current citations list
-      setTimeout(updateCurrentCitationsPanel, 500);
+      setTimeout(updateCitationsPanel, 500);
     } else {
       console.warn("Citation not found for removal");
     }
