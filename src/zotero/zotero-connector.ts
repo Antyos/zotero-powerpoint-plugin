@@ -8,7 +8,6 @@ import api, {
   MultiReadResponse,
   ZoteroApi,
   RequestOptions,
-  ZoteroItemData,
   ZoteroCreator,
 } from "zotero-api-client";
 
@@ -177,7 +176,7 @@ export class ZoteroLibrary {
     try {
       const response = await ZoteroLibrary.getClient()
         .items()
-        .get({ ...opts, q: query });
+        .get({ ...opts, q: query, itemType: "-attachment" });
       const itemData = this.isSingleResponse(response) ? [response.getData()] : response.getData();
       console.log("Quick search results:", itemData);
       if (!itemData || itemData.length === 0) {
@@ -185,8 +184,8 @@ export class ZoteroLibrary {
       }
       return itemData.map((item) => ({
         id: item.key,
-        title: item.title ?? "",
-        creators: item.creators ?? [],
+        title: item.title,
+        creators: item.creators,
         date: item.date ?? "",
       }));
     } catch (error) {

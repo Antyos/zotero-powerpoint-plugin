@@ -122,11 +122,17 @@ function displaySearchResults(results: TitleCreatorDate[]) {
   const resultsList = results
     .map((item) => {
       const title = item.title || "Untitled";
+      const author =
+        item.creators.length > 1
+          ? `${item.creators[0].lastName} et al.`
+          : item.creators.length == 1
+            ? item.creators[0].lastName
+            : "unknown";
       return `
         <div class="ms-ListItem zotero-result-item"
-             onclick="insertCitation('${item.id || "unknown"}', '${item.creators[0]?.lastName ?? "unknown"}', '${item.date ?? ""}')">
+             onclick="insertCitation('${item.id || "unknown"}', '${author}', '(${item.date ?? ""})')">
           <div class="ms-font-m zotero-result-title">${title}</div>
-          <div class="ms-font-s zotero-result-meta">${item.creators[0]?.lastName || "unknown"}, ${item.date}</div>
+          <div class="ms-font-s zotero-result-meta">${author} (${item.date.split("-")[0]})</div>
         </div>
       `;
     })

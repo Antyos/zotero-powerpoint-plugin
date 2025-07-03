@@ -9,6 +9,7 @@ body {
   height: 100%;
   margin: 0;
   padding: 0;
+  background-color: #f8f9fa;
 }
 
 ul {
@@ -23,6 +24,11 @@ ul {
   -webkit-flex-direction: column;
   flex-direction: column;
   align-items: flex-start;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e1e5e9;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 1;
 }
 
 .header-content {
@@ -81,20 +87,9 @@ ul {
   outline-offset: 2px;
 }
 
-.config-status-bar {
-  padding: 8px 20px;
-  background-color: #f3f2f1;
-  border-bottom: 1px solid #edebe9;
-  margin: 0;
-}
-
-.config-status-bar p {
-  margin: 0;
-  text-align: center;
-}
-
 .zotero-search-section {
   margin-top: 10px;
+  width: 100%;
 }
 
 .ms-welcome__main {
@@ -108,7 +103,8 @@ ul {
   align-items: center;
   -webkit-flex: 1 0 0;
   flex: 1 0 0;
-  padding: 10px 20px;
+  padding: 10px 10px;
+  background-color: #f8f9fa;
 }
 
 .ms-welcome__main > h2 {
@@ -154,8 +150,16 @@ b {
   margin-bottom: 20px;
 }
 
-.zotero-config-status {
-  margin-top: 10px;
+.ms-Grid {
+  width: 100%;
+}
+
+.ms-Grid-row {
+  width: 100%;
+}
+
+.ms-Grid-col {
+  width: 100%;
 }
 
 .zotero-search-field {
@@ -181,6 +185,8 @@ b {
   overflow-y: auto;
   border: 1px solid #ddd;
   padding: 10px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .zotero-status-section {
@@ -205,14 +211,6 @@ b {
 .zotero-result-meta {
   color: #666;
   font-size: 0.9em;
-}
-
-.config-status-configured {
-  color: green;
-}
-
-.config-status-not-configured {
-  color: orange;
 }
 
 .app-body-hidden {
