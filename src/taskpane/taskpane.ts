@@ -6,10 +6,10 @@
 import { ZoteroItemData } from "zotero-api-client";
 import { ZoteroLibrary, TitleCreatorDate } from "../zotero/zotero-connector";
 import {
-  saveSlideCitationAsTag,
-  getSlideCitationsFromTags,
-  removeSlideCitationFromTags,
+  CitationStore,
   debugSlideTags,
+  getCitationsOnSlide,
+  insertCitationOnSlide,
 } from "../zotero/slide-citations";
 
 Office.onReady((info) => {
@@ -41,8 +41,9 @@ function initializeZoteroUI() {
   const testButton = document.getElementById("test-connection");
   const refreshCitationsButton = document.getElementById("refresh-citations");
   const insertMockCitationButton = document.getElementById("insert-mock-citation");
-  const searchInput = document.getElementById("search-query") as HTMLInputElement;
+  const searchInput = document.getElementById("search-query");
   const debugSlideTagsButton = document.getElementById("debug-slide-tags");
+  const debugCitationStoreButton = document.getElementById("debug-citation-store");
 
   if (configureButton) {
     configureButton.onclick = configureZotero;
@@ -57,7 +58,7 @@ function initializeZoteroUI() {
   }
 
   if (refreshCitationsButton) {
-    refreshCitationsButton.onclick = displayCurrentCitations;
+    refreshCitationsButton.onclick = updateCurrentCitationsPanel;
   }
 
   if (debugSlideTagsButton) {
@@ -65,6 +66,13 @@ function initializeZoteroUI() {
       debugSlideTags().catch((error) => {
         console.error("Error debugging slide tags:", error);
       });
+    };
+  }
+
+  if (debugCitationStoreButton) {
+    debugCitationStoreButton.onclick = () => {
+      console.log("Debugging citation store...");
+      CitationStore.getInstance().debugXml();
     };
   }
 
@@ -95,7 +103,7 @@ function initializeZoteroUI() {
   }
 
   // Load current citations on initialization
-  displayCurrentCitations();
+  updateCurrentCitationsPanel();
 }
 
 async function configureZotero() {
@@ -188,25 +196,22 @@ function displaySearchResults(results: TitleCreatorDate[]) {
 async function insertCitation(citation: ZoteroItemData) {
   try {
     console.log(`Inserting citation: ${citation.creators[0].lastName}, ${citation.date}`);
-
-    // Use tag-based storage instead of XML
-    await saveSlideCitationAsTag(citation);
-
-    // Refresh the current citations list
-    setTimeout(displayCurrentCitations, 500);
+    // Use simplified storage approach
+    await insertCitationOnSlide(citation);
   } catch (error) {
     console.error("Citation insertion error:", error);
   }
+  // Refresh the current citations list
+  setTimeout(updateCurrentCitationsPanel, 500);
 }
 (window as any).insertCitation = insertCitation;
 
-async function displayCurrentCitations() {
+async function updateCurrentCitationsPanel() {
   try {
-    console.log("Loading current citations from slide tags...");
-
+    console.log("Loading current citations from slide...");
     await PowerPoint.run(async (_context) => {
-      const citations = await getSlideCitationsFromTags();
-      console.log(`Found ${citations.length} citations in current slide tags.`);
+      const citations = await getCitationsOnSlide();
+      console.log(`Found ${citations.length} citations in current slide.`);
       console.log(citations);
       displayCitationsOnTaskpane(citations);
     });
@@ -252,12 +257,12 @@ async function removeCitation(citationId: string) {
   try {
     console.log(`Removing citation: ${citationId}`);
 
-    const success = await removeSlideCitationFromTags(citationId);
+    const success = false; //await removeCitationSimple(citationId);
 
     if (success) {
       console.log("Citation removed successfully");
       // Refresh the current citations list
-      setTimeout(displayCurrentCitations, 500);
+      setTimeout(updateCurrentCitationsPanel, 500);
     } else {
       console.warn("Citation not found for removal");
     }
