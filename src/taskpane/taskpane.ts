@@ -5,7 +5,12 @@
 
 import { ZoteroItemData } from "zotero-api-client";
 import { ZoteroLibrary, TitleCreatorDate } from "../zotero/zotero-connector";
-import { saveSlideCitation, getSlideCitations } from "../zotero/slide-citations";
+import {
+  saveSlideCitationAsTag,
+  getSlideCitationsFromTags,
+  removeSlideCitationFromTags,
+  debugSlideTags,
+} from "../zotero/slide-citations";
 
 Office.onReady((info) => {
   if (info.host === Office.HostType.PowerPoint) {
@@ -37,6 +42,7 @@ function initializeZoteroUI() {
   const refreshCitationsButton = document.getElementById("refresh-citations");
   const insertMockCitationButton = document.getElementById("insert-mock-citation");
   const searchInput = document.getElementById("search-query") as HTMLInputElement;
+  const debugSlideTagsButton = document.getElementById("debug-slide-tags");
 
   if (configureButton) {
     configureButton.onclick = configureZotero;
@@ -52,6 +58,14 @@ function initializeZoteroUI() {
 
   if (refreshCitationsButton) {
     refreshCitationsButton.onclick = displayCurrentCitations;
+  }
+
+  if (debugSlideTagsButton) {
+    debugSlideTagsButton.onclick = () => {
+      debugSlideTags().catch((error) => {
+        console.error("Error debugging slide tags:", error);
+      });
+    };
   }
 
   if (insertMockCitationButton) {
@@ -175,9 +189,8 @@ async function insertCitation(citation: ZoteroItemData) {
   try {
     console.log(`Inserting citation: ${citation.creators[0].lastName}, ${citation.date}`);
 
-    // await PowerPoint.run(async (_context) => {
-    await saveSlideCitation(citation);
-    // });
+    // Use tag-based storage instead of XML
+    await saveSlideCitationAsTag(citation);
 
     // Refresh the current citations list
     setTimeout(displayCurrentCitations, 500);
@@ -189,11 +202,11 @@ async function insertCitation(citation: ZoteroItemData) {
 
 async function displayCurrentCitations() {
   try {
-    console.log("Loading current citations from slide XML...");
+    console.log("Loading current citations from slide tags...");
 
     await PowerPoint.run(async (_context) => {
-      const citations = await getSlideCitations();
-      console.log(`Found ${citations.length} citations in current slide XML.`);
+      const citations = await getSlideCitationsFromTags();
+      console.log(`Found ${citations.length} citations in current slide tags.`);
       console.log(citations);
       displayCitationsOnTaskpane(citations);
     });
@@ -233,6 +246,26 @@ function displayCitationsOnTaskpane(citations: ZoteroItemData[]) {
 
   citationsContainer.innerHTML = citationsList;
 }
+
+// Global function for citation removal (called from HTML onclick)
+async function removeCitation(citationId: string) {
+  try {
+    console.log(`Removing citation: ${citationId}`);
+
+    const success = await removeSlideCitationFromTags(citationId);
+
+    if (success) {
+      console.log("Citation removed successfully");
+      // Refresh the current citations list
+      setTimeout(displayCurrentCitations, 500);
+    } else {
+      console.warn("Citation not found for removal");
+    }
+  } catch (error) {
+    console.error("Citation removal error:", error);
+  }
+}
+(window as any).removeCitation = removeCitation;
 
 export async function run() {
   /**
