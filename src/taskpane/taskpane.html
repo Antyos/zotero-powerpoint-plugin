@@ -93,9 +93,29 @@
       <section class="ms-Grid">
         <div class="ms-Grid-row">
           <div class="ms-Grid-col ms-sm12">
-            <h3 class="ms-font-l">Results</h3>
+            <h3 class="ms-font-l">Search Results</h3>
             <div id="search-results" class="ms-List zotero-results">
               <p class="ms-font-s">Search results will appear here...</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Current Citations Section -->
+      <section class="ms-Grid">
+        <div class="ms-Grid-row">
+          <div class="ms-Grid-col ms-sm12">
+            <h3 class="ms-font-l">Citations in Current Slide</h3>
+            <div class="zotero-button-group">
+              <button id="refresh-citations" class="ms-Button">
+                <span class="ms-Button-label">Refresh Citations</span>
+              </button>
+              <button id="insert-mock-citation" class="ms-Button zotero-button-secondary">
+                <span class="ms-Button-label">Insert Mock Citation</span>
+              </button>
+            </div>
+            <div id="current-citations" class="ms-List zotero-results">
+              <p class="ms-font-s">No citations found in current slide.</p>
             </div>
           </div>
         </div>

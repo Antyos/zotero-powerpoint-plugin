@@ -18,10 +18,10 @@ Office.onReady(() => {
  * @param event
  */
 function insertZoteroCitation(event: Office.AddinCommands.Event) {
-  return PowerPoint.run(async (context) => {
+  return PowerPoint.run(async () => {
     try {
       console.log("Starting citation insertion...");
-      const zotero = await ZoteroLibrary.getClient();
+      // const zotero = await ZoteroLibrary.getClient();
 
       // Initialize if not ready
       // if (!zotero.isReady()) {
@@ -110,7 +110,7 @@ function testZoteroConnection(event: Office.AddinCommands.Event) {
  * @param event
  */
 function openZoteroConfig(event: Office.AddinCommands.Event) {
-  return PowerPoint.run(async (context) => {
+  return PowerPoint.run(async () => {
     try {
       console.log("Opening Zotero configuration dialog...");
       const zotero = ZoteroLibrary.getInstance();

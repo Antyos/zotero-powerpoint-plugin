@@ -216,3 +216,17 @@ b {
 .app-body-hidden {
   display: none;
 }
+
+.citation-item {
+  border-left: 3px solid #0078d7;
+  background-color: #f8f9fa;
+}
+
+.citation-actions {
+  margin-top: 8px;
+}
+
+.citation-actions .ms-Button {
+  font-size: 12px;
+  padding: 4px 8px;
+}

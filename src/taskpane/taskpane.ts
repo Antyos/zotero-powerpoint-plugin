@@ -3,7 +3,9 @@
  * See LICENSE in the project root for license information.
  */
 
+import { ZoteroItemData } from "zotero-api-client";
 import { ZoteroLibrary, TitleCreatorDate } from "../zotero/zotero-connector";
+import { saveSlideCitation, getSlideCitations } from "../zotero/slide-citations";
 
 Office.onReady((info) => {
   if (info.host === Office.HostType.PowerPoint) {
@@ -32,6 +34,8 @@ function initializeZoteroUI() {
   const configureButton = document.getElementById("configure-zotero");
   const searchButton = document.getElementById("search-zotero");
   const testButton = document.getElementById("test-connection");
+  const refreshCitationsButton = document.getElementById("refresh-citations");
+  const insertMockCitationButton = document.getElementById("insert-mock-citation");
   const searchInput = document.getElementById("search-query") as HTMLInputElement;
 
   if (configureButton) {
@@ -46,6 +50,28 @@ function initializeZoteroUI() {
     testButton.onclick = testZoteroConnection;
   }
 
+  if (refreshCitationsButton) {
+    refreshCitationsButton.onclick = displayCurrentCitations;
+  }
+
+  if (insertMockCitationButton) {
+    insertMockCitationButton.onclick = () => {
+      insertCitation({
+        key: "123456",
+        title: "Test Citation",
+        creators: [{ creatorType: "author", lastName: "Smith" }],
+        date: "2023-04-19",
+        itemType: "book",
+        collections: [],
+        dateAdded: new Date().toISOString(),
+        dateModified: new Date().toISOString(),
+        relations: { foo: [] },
+        version: 1,
+        tags: [],
+      });
+    };
+  }
+
   if (searchInput) {
     searchInput.addEventListener("keypress", (e) => {
       if (e.key === "Enter") {
@@ -53,6 +79,9 @@ function initializeZoteroUI() {
       }
     });
   }
+
+  // Load current citations on initialization
+  displayCurrentCitations();
 }
 
 async function configureZotero() {
@@ -142,23 +171,68 @@ function displaySearchResults(results: TitleCreatorDate[]) {
 }
 
 // Global function for citation insertion (called from HTML onclick)
-(window as any).insertCitation = async function (
-  itemId: string,
-  author: string,
-  year: string = ""
-) {
+async function insertCitation(citation: ZoteroItemData) {
   try {
-    console.log(`Inserting citation: ${author}, ${year}`);
+    console.log(`Inserting citation: ${citation.creators[0].lastName}, ${citation.date}`);
 
-    // Insert the citation into PowerPoint
-    const options: Office.SetSelectedDataOptions = { coercionType: Office.CoercionType.Text };
-    await Office.context.document.setSelectedDataAsync(`[${author}, ${year}]`, options);
+    // await PowerPoint.run(async (_context) => {
+    await saveSlideCitation(citation);
+    // });
 
-    console.log(`Citation inserted: ${author}, ${year}`);
+    // Refresh the current citations list
+    setTimeout(displayCurrentCitations, 500);
   } catch (error) {
     console.error("Citation insertion error:", error);
   }
-};
+}
+(window as any).insertCitation = insertCitation;
+
+async function displayCurrentCitations() {
+  try {
+    console.log("Loading current citations from slide XML...");
+
+    await PowerPoint.run(async (_context) => {
+      const citations = await getSlideCitations();
+      console.log(`Found ${citations.length} citations in current slide XML.`);
+      console.log(citations);
+      displayCitationsOnTaskpane(citations);
+    });
+  } catch (error) {
+    console.error("Error loading citations:", error);
+    displayCitationsOnTaskpane([]);
+  }
+}
+
+function displayCitationsOnTaskpane(citations: ZoteroItemData[]) {
+  const citationsContainer = document.getElementById("current-citations");
+  if (!citationsContainer) return;
+
+  if (citations.length === 0) {
+    citationsContainer.innerHTML = '<p class="ms-font-s">No citations found in current slide.</p>';
+    return;
+  }
+
+  const citationsList = citations
+    .map((citation) => {
+      return `
+        <div class="ms-ListItem zotero-result-item citation-item"
+             data-citation-id="${citation.id}">
+          <div class="ms-font-m zotero-result-title">${citation.title}</div>
+          <div class="ms-font-s zotero-result-meta">
+            ID: ${citation.id} | Author: ${citation.creators.map((c) => c.lastName).join(", ")} | Year: ${citation.date?.split("-")[0] ?? ""}
+          </div>
+          <div class="citation-actions">
+            <button class="ms-Button ms-Button--small" onclick="removeCitation('${citation.id}')">
+              <span class="ms-Button-label">Remove</span>
+            </button>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+
+  citationsContainer.innerHTML = citationsList;
+}
 
 export async function run() {
   /**
