@@ -3,13 +3,27 @@
  * Based on obsidian-zotero-integration BBT implementation
  */
 
-import api, { SingleReadResponse, ZoteroApi, RequestOptions } from "zotero-api-client";
+import api, {
+  SingleReadResponse,
+  MultiReadResponse,
+  ZoteroApi,
+  RequestOptions,
+  ZoteroItemData,
+  ZoteroCreator,
+} from "zotero-api-client";
 
-interface ZoteroField {
+export interface ZoteroField {
   id: string;
   citationKey: string;
   formattedText: string;
   shapeId: string;
+}
+
+export interface TitleCreatorDate {
+  id: string;
+  title: string;
+  creators: ZoteroCreator[];
+  date: string;
 }
 
 /**
@@ -84,6 +98,7 @@ export class ZoteroLibrary {
 
       await this.saveConfig();
       console.log(`Configured Zotero user: ${config.userId} (${config.userType})`);
+      ZoteroLibrary.client = null; // Reset client to force re-initialization
 
       // Test the connection with new credentials
       await this.checkConnection();
@@ -138,8 +153,7 @@ export class ZoteroLibrary {
   public async getItems(opts?: RequestOptions): Promise<ZoteroField[]> {
     try {
       const response = await ZoteroLibrary.getClient().items().get(opts);
-      const itemData =
-        response instanceof SingleReadResponse ? [response.getData()] : response.getData();
+      const itemData = this.isSingleResponse(response) ? [response.getData()] : response.getData();
       console.log("Fetched Zotero items:", itemData);
       return itemData.map((item) => ({
         id: item.key,
@@ -150,6 +164,34 @@ export class ZoteroLibrary {
     } catch (error) {
       console.error("Error getting Zotero items:", error);
       throw new Error(`Failed to get items: ${error}`);
+    }
+  }
+
+  private isSingleResponse(
+    response: SingleReadResponse | MultiReadResponse
+  ): response is SingleReadResponse {
+    return response.getResponseType() === "SingleReadResponse";
+  }
+
+  public async quickSearch(query: string, opts?: RequestOptions): Promise<TitleCreatorDate[]> {
+    try {
+      const response = await ZoteroLibrary.getClient()
+        .items()
+        .get({ ...opts, q: query });
+      const itemData = this.isSingleResponse(response) ? [response.getData()] : response.getData();
+      console.log("Quick search results:", itemData);
+      if (!itemData || itemData.length === 0) {
+        return [];
+      }
+      return itemData.map((item) => ({
+        id: item.key,
+        title: item.title ?? "",
+        creators: item.creators ?? [],
+        date: item.date ?? "",
+      }));
+    } catch (error) {
+      console.error("Error performing quick search:", error);
+      throw new Error(`Failed to perform quick search: ${error}`);
     }
   }
 

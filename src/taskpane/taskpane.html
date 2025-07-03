@@ -10,12 +10,16 @@
     <title>Contoso Task Pane Add-in</title>
 
     <!-- Office JavaScript API -->
-    <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+    <script
+      type="text/javascript"
+      src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"
+    ></script>
 
     <!-- For more information on Fluent UI, visit https://developer.microsoft.com/fluentui#/. -->
     <link
       rel="stylesheet"
-      href="https://res-1.cdn.office.net/files/fabric-cdn-prod_20230815.002/office-ui-fabric-core/11.1.0/css/fabric.min.css" />
+      href="https://res-1.cdn.office.net/files/fabric-cdn-prod_20230815.002/office-ui-fabric-core/11.1.0/css/fabric.min.css"
+    />
 
     <!-- Template styles -->
     <link href="taskpane.css" rel="stylesheet" type="text/css" />
@@ -23,8 +27,28 @@
 
   <body class="ms-font-m ms-welcome ms-Fabric">
     <header class="ms-welcome__header ms-bgColor-neutralLighter">
-      <img width="90" height="90" src="../../assets/logo-filled.png" alt="Contoso" title="Contoso" />
-      <h1 class="ms-font-su">Welcome</h1>
+      <div class="header-content">
+        <div class="header-left">
+          <img
+            width="32"
+            height="32"
+            src="../../assets/logo-filled.png"
+            alt="Zotero"
+            title="Zotero"
+            class="header-icon"
+          />
+          <h1 class="ms-font-xl header-title">Zotero PowerPoint</h1>
+        </div>
+        <div class="header-right">
+          <button
+            id="configure-zotero"
+            class="ms-Button header-settings-btn"
+            title="Configure Zotero API"
+          >
+            <i class="ms-Icon ms-Icon--Settings"></i>
+          </button>
+        </div>
+      </div>
     </header>
     <section id="sideload-msg" class="ms-welcome__main">
       <h2 class="ms-font-xl">
@@ -38,27 +62,53 @@
         your add-in to see app body.
       </h2>
     </section>
-    <main id="app-body" class="ms-welcome__main" style="display: none">
-      <h2 class="ms-font-xl">Discover what Office Add-ins can do for you today!</h2>
-      <ul class="ms-List ms-welcome__features">
-        <li class="ms-ListItem">
-          <i class="ms-Icon ms-Icon--Ribbon ms-font-xl"></i>
-          <span class="ms-font-m">Achieve more with Office integration</span>
-        </li>
-        <li class="ms-ListItem">
-          <i class="ms-Icon ms-Icon--Unlock ms-font-xl"></i>
-          <span class="ms-font-m">Unlock features and functionality</span>
-        </li>
-        <li class="ms-ListItem">
-          <i class="ms-Icon ms-Icon--Design ms-font-xl"></i>
-          <span class="ms-font-m">Create and visualize like a pro</span>
-        </li>
-      </ul>
-      <p class="ms-font-l">Modify the source files, then click <b>Run</b>.</p>
-      <div role="button" id="run" class="ms-welcome__action ms-Button ms-Button--hero ms-font-xl">
-        <span class="ms-Button-label">Run</span>
-      </div>
-      <p><label id="item-subject"></label></p>
+    <main id="app-body" class="ms-welcome__main app-body-hidden">
+      <!-- Zotero Search Section -->
+      <section class="ms-Grid zotero-search-section">
+        <div class="ms-Grid-row">
+          <div class="ms-Grid-col ms-sm12">
+            <h3 class="ms-font-l">Search Zotero Library</h3>
+            <div class="ms-TextField zotero-search-field">
+              <label class="ms-Label">Search Query:</label>
+              <input
+                id="search-query"
+                type="text"
+                class="ms-TextField-field zotero-search-input"
+                placeholder="Enter title, author, or keywords..."
+              />
+            </div>
+            <div class="zotero-button-group">
+              <button id="search-zotero" class="ms-Button ms-Button--hero">
+                <span class="ms-Button-label">Search Library</span>
+              </button>
+              <button id="test-connection" class="ms-Button zotero-button-secondary">
+                <span class="ms-Button-label">Test Connection</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Results Section -->
+      <section class="ms-Grid">
+        <div class="ms-Grid-row">
+          <div class="ms-Grid-col ms-sm12">
+            <h3 class="ms-font-l">Results</h3>
+            <div id="search-results" class="ms-List zotero-results">
+              <p class="ms-font-s">Search results will appear here...</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Status/Debug Section -->
+      <section class="ms-Grid zotero-status-section">
+        <div class="ms-Grid-row">
+          <div class="ms-Grid-col ms-sm12">
+            <p><label id="item-subject" class="ms-font-s"></label></p>
+          </div>
+        </div>
+      </section>
     </main>
   </body>
 </html>
