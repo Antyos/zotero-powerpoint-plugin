@@ -90,21 +90,6 @@
                     <FunctionName>testZoteroConnection</FunctionName>
                   </Action>
                 </Control>
-                <Control xsi:type="Button" id="ZoteroConfigButton">
-                  <Label resid="ZoteroConfig.Label" />
-                  <Supertip>
-                    <Title resid="ZoteroConfig.Label" />
-                    <Description resid="ZoteroConfig.Tooltip" />
-                  </Supertip>
-                  <Icon>
-                    <bt:Image size="16" resid="Icon.16x16" />
-                    <bt:Image size="32" resid="Icon.32x32" />
-                    <bt:Image size="80" resid="Icon.80x80" />
-                  </Icon>
-                  <Action xsi:type="ExecuteFunction">
-                    <FunctionName>openZoteroConfig</FunctionName>
-                  </Action>
-                </Control>
               </Group>
             </OfficeTab>
           </ExtensionPoint>
