@@ -223,35 +223,36 @@ export class CitationStore {
   }
 
   /**
-   * Get a citation by key using the new CitationStoreXml schema
-   */
-  public async get(key: string): Promise<ZoteroItemData | null> {
-    try {
-      const citations = await this.getAll();
-      // Find the citation with the matching key
-      const citation = citations.find((cit) => cit.key.toString() === key);
-
-      return citation ?? null;
-    } catch (error) {
-      throw new Error(`Failed to get citation: ${error}`);
-    }
-  }
-
-  /**
    * Get all citations from the store using the new CitationStoreXml schema
    */
-  public async getAll(): Promise<ZoteroItemData[]> {
+  public async getAll(): Promise<Map<string, ZoteroItemData>> {
     return await PowerPoint.run(async (context) => {
       try {
-        const xmlPart = await this.getOrCreateCustomXmlPart(context);
-        const storeXml = await this.getCitationStoreXml(context, xmlPart);
+        const storeXml = await this.getCitationStoreXml(context);
 
-        // Return all citation data from the store
-        return storeXml.citations.citation;
+        // Return all citation data from the store as a Map (more concise approach)
+        return new Map(
+          storeXml.citations.citation.map((citation) => [citation.key.toString(), citation])
+        );
       } catch (error) {
         throw new Error(`Failed to get all citations: ${error}`);
       }
     });
+  }
+
+  /**
+   * Get a citation by key using the new CitationStoreXml schema
+   */
+  public async getItem(key: string): Promise<ZoteroItemData | null>;
+  public async getItem(key: string[]): Promise<Array<ZoteroItemData | null>>;
+  public async getItem(
+    key: string | string[]
+  ): Promise<ZoteroItemData | null | Array<ZoteroItemData | null>> {
+    const items = await this.getAll();
+    if (Array.isArray(key)) {
+      return key.map((k) => items.get(k) ?? null);
+    }
+    return items.get(key) ?? null;
   }
 
   /**

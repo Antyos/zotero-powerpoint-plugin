@@ -160,7 +160,7 @@ export async function getCitationsOnSlide(): Promise<ZoteroItemData[]> {
 
   const citations: ZoteroItemData[] = [];
   for (const key of citationKeys) {
-    const citation = await store.get(key);
+    const citation = await store.getItem(key);
     if (citation) {
       citations.push(citation);
     }
