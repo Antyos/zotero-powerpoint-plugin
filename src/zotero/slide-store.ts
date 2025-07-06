@@ -96,7 +96,8 @@ export class CitationStore {
   }
 
   /**
-   * Initialize or get the custom XML part for citations
+   * Get the custom XML part for citations in `PowerPoint.RequestContext.presentation`. If it
+   * doesn't exist, create it.
    */
   public async getOrCreateCustomXmlPart(
     context: PowerPoint.RequestContext
@@ -527,7 +528,7 @@ export async function debugSlideTags(): Promise<void> {
 /**
  * Get all citation keys from the current slide
  */
-export async function getCitationKeysFromSlide(
+export async function getCitationKeysOnSlide(
   slide: PowerPoint.Slide | "current"
 ): Promise<string[]> {
   return await PowerPoint.run(async (context) => {
@@ -573,7 +574,7 @@ export async function insertCitationOnSlide(citation: ZoteroItemData): Promise<v
  */
 export async function getCitationsOnSlide(): Promise<ZoteroItemData[]> {
   const store = CitationStore.getInstance();
-  const citationKeys = await getCitationKeysFromSlide("current");
+  const citationKeys = await getCitationKeysOnSlide("current");
 
   const citations: ZoteroItemData[] = [];
   for (const key of citationKeys) {
