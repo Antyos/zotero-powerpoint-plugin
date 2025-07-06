@@ -46,6 +46,7 @@ function initializeZoteroUI() {
   const debugSlideTagsButton = document.getElementById("debug-slide-tags");
   const debugCitationStoreButton = document.getElementById("debug-citation-store");
   const debugCitationsButton = document.getElementById("debug-citations");
+  const clearCitationStoreButton = document.getElementById("clear-citation-store");
 
   if (configureButton) {
     configureButton.onclick = configureZotero;
@@ -104,6 +105,20 @@ function initializeZoteroUI() {
         version: 1,
         tags: [],
       });
+    };
+  }
+
+  if (clearCitationStoreButton) {
+    clearCitationStoreButton.onclick = async () => {
+      try {
+        console.log("Clearing citation store...");
+        await CitationStore.getInstance().clearStore();
+        console.log("Citation store cleared.");
+        // Refresh the current citations list
+        setTimeout(updateCitationsPanel, 500);
+      } catch (error) {
+        console.error("Error clearing citation store:", error);
+      }
     };
   }
 
