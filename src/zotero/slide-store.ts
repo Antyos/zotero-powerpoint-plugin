@@ -527,9 +527,13 @@ export async function debugSlideTags(): Promise<void> {
 /**
  * Get all citation keys from the current slide
  */
-export async function getCitationKeysFromSlide(): Promise<string[]> {
+export async function getCitationKeysFromSlide(
+  slide: PowerPoint.Slide | "current"
+): Promise<string[]> {
   return await PowerPoint.run(async (context) => {
-    const slide = await getCurrentSlide(context);
+    if (slide === "current") {
+      slide = await getCurrentSlide(context);
+    }
     const tags = slide.tags;
     await context.sync();
     // console.log(`Slide Tags: ${JSON.stringify(tags, null, 2)}`);
@@ -569,7 +573,7 @@ export async function insertCitationOnSlide(citation: ZoteroItemData): Promise<v
  */
 export async function getCitationsOnSlide(): Promise<ZoteroItemData[]> {
   const store = CitationStore.getInstance();
-  const citationKeys = await getCitationKeysFromSlide();
+  const citationKeys = await getCitationKeysFromSlide("current");
 
   const citations: ZoteroItemData[] = [];
   for (const key of citationKeys) {

@@ -11,7 +11,7 @@ import {
   getCitationsOnSlide,
   insertCitationOnSlide,
   removeCitationFromSlide,
-} from "../zotero/slide-citations";
+} from "../zotero/slide-store";
 
 Office.onReady((info) => {
   if (info.host === Office.HostType.PowerPoint) {
