@@ -68,34 +68,22 @@
         <div class="ms-Grid-row">
           <div class="ms-Grid-col ms-sm12">
             <h3 class="ms-font-l">Search Zotero Library</h3>
-            <div class="ms-TextField zotero-search-field">
-              <label class="ms-Label">Search Query:</label>
-              <input
-                id="search-query"
-                type="text"
-                class="ms-TextField-field zotero-search-input"
-                placeholder="Enter title, author, or keywords..."
-              />
-            </div>
-            <div class="zotero-button-group">
-              <button id="search-zotero" class="ms-Button ms-Button--hero">
-                <span class="ms-Button-label">Search Library</span>
-              </button>
-              <button id="test-connection" class="ms-Button zotero-button-secondary">
-                <span class="ms-Button-label">Test Connection</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Results Section -->
-      <section class="ms-Grid">
-        <div class="ms-Grid-row">
-          <div class="ms-Grid-col ms-sm12">
-            <h3 class="ms-font-l">Search Results</h3>
-            <div id="search-results" class="ms-List zotero-results">
-              <p class="ms-font-s">Search results will appear here...</p>
+            <div class="zotero-search-dropdown">
+              <div class="ms-TextField zotero-search-field">
+                <label class="ms-Label">Search Query:</label>
+                <input
+                  id="search-query"
+                  type="text"
+                  class="ms-TextField-field zotero-search-input"
+                  placeholder="Enter title, author, or keywords..."
+                  autocomplete="off"
+                />
+              </div>
+              <div id="search-dropdown" class="zotero-dropdown-container hidden">
+                <div id="search-results" class="zotero-dropdown-list">
+                  <!-- Results will appear here -->
+                </div>
+              </div>
             </div>
           </div>
         </div>

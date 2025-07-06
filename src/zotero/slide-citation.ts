@@ -102,7 +102,10 @@ class CitationFormatter {
   }
 
   public format(citation: ZoteroItemData): FormattedText[] {
-    const year = citation.date ? citation.date.split("-")[0] : "n.d.";
+    const year =
+      citation.date && typeof citation.date === "string"
+        ? citation.date.split("-")[0]
+        : citation.date || "n.d.";
     const creator = citation.creators[0];
     const etal = citation.creators && citation.creators.length > 1 ? " et al." : "";
     const journalAbbreviation = citation.publicationTitle

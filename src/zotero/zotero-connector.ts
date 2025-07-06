@@ -169,7 +169,7 @@ export class ZoteroLibrary {
     try {
       const response = await ZoteroLibrary.getClient()
         .items()
-        .get({ ...opts, q: query, itemType: "-attachment" });
+        .get({ ...opts, q: query, itemType: "-attachment", limit: 5 });
       const itemData = this.isSingleResponse(response) ? [response.getData()] : response.getData();
       console.log("Quick search results:", itemData);
       if (!itemData || itemData.length === 0) {
