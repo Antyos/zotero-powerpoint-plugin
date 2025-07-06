@@ -157,23 +157,23 @@
 
       <form id="configForm">
         <div class="form-group">
-          <label class="form-label" for="apiKey">API Key *</label>
+          <label class="form-label" for="apiKey">API Key</label>
           <input
             type="password"
             id="apiKey"
             class="form-input"
             placeholder="Enter your Zotero API key"
-            required
           />
           <div class="help-text">
-            Get your API key from
+            Generate a new API key from your
             <a
               href="https://www.zotero.org/settings/keys/new"
               target="_blank"
               rel="noopener noreferrer"
               >Zotero Settings</a
-            >. Make sure to select the <strong>Allow Library Access</strong>. Paste the key here.
-            permission.
+            >. Make sure to select the <strong>Allow Library Access</strong> permission. Paste the
+            key here.
+            <p>Note: For security, the API key will not be displayed again after saving.</p>
           </div>
           <div class="error-message" id="apiKeyError"></div>
         </div>
