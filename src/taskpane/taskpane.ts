@@ -5,13 +5,13 @@
 
 import { ZoteroItemData } from "zotero-api-client";
 import { ZoteroLibrary, TitleCreatorDate } from "../zotero/zotero-connector";
+import { CitationStore } from "../zotero/citation-store";
 import {
-  CitationStore,
-  debugSlideTags,
   getCitationsOnSlide,
   insertCitationOnSlide,
+  debugSlideTags,
   removeCitationFromSlide,
-} from "../zotero/citation-store";
+} from "../zotero/slide-citation";
 
 Office.onReady((info) => {
   if (info.host === Office.HostType.PowerPoint) {
