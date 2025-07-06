@@ -8,10 +8,22 @@
  * - Helper functions manage citation keys on slides
  */
 
-import { ZoteroItemData, ZoteroCreator, ZoteroTag } from "zotero-api-client";
+import { ZoteroItemData } from "zotero-api-client";
+import { XMLParser, XMLBuilder } from "fast-xml-parser";
 
 const CITATION_XML_NAMESPACE = "http://zotero.org/citations";
 const CITATION_TAG_KEY = "ZOTERO_CITATIONS";
+
+/**
+ * Schema interface for the citation XML structure stored in customXmlParts
+ */
+interface CitationStoreXml {
+  citations: {
+    citation: ZoteroItemData[];
+  };
+  version: 1;
+  "@_xmlns": typeof CITATION_XML_NAMESPACE;
+}
 
 async function getCurrentSlide(context: PowerPoint.RequestContext): Promise<PowerPoint.Slide> {
   // Get the selected slide or fallback to first slide
@@ -82,8 +94,31 @@ async function debugXmlParts(
 export class CitationStore {
   private static instance: CitationStore | null = null;
   private xmlPartId: string = "ZoteroCitations";
+  private xmlParser: XMLParser;
+  private xmlBuilder: XMLBuilder;
 
-  private constructor() {}
+  private constructor() {
+    // Configure XML parser options
+    this.xmlParser = new XMLParser({
+      ignoreAttributes: false,
+      attributeNamePrefix: "@_",
+      textNodeName: "#text",
+      parseAttributeValue: false,
+      parseTagValue: true,
+      trimValues: true,
+    });
+
+    // Configure XML builder options
+    this.xmlBuilder = new XMLBuilder({
+      ignoreAttributes: false,
+      attributeNamePrefix: "@_",
+      textNodeName: "#text",
+      format: true,
+      indentBy: "  ",
+      suppressEmptyNode: false,
+      suppressBooleanAttributes: false,
+    });
+  }
 
   /**
    * Get singleton instance of CitationStore
@@ -127,114 +162,121 @@ export class CitationStore {
   /**
    * Helper function to get XML content from a PowerPoint CustomXmlPart
    */
-  private async getXmlContent(
+  private async xmlPartToString(
     context: PowerPoint.RequestContext,
     xmlPart: PowerPoint.CustomXmlPart
   ): Promise<string> {
-    // Load the XML part properties we need
-    // xmlPart.load(["id", "namespaceUri"]);
-    // await context.sync();
-
-    // Now get the XML content
     const xmlData = xmlPart.getXml();
     await context.sync();
-
     // eslint-disable-next-line office-addins/load-object-before-read
     return xmlData.value;
   }
 
-  // /**
-  //  * Helper function to replace XML part content
-  //  */
-  // private async replaceXmlContent(
-  //   context: PowerPoint.RequestContext,
-  //   xmlPart: PowerPoint.CustomXmlPart,
-  //   newXmlContent: string
-  // ): Promise<void> {
-  //   xmlPart.setXml(newXmlContent);
-  //   await context.sync();
-  // }
-
   /**
-   * Add a citation to the store
+   * Get the parsed citation store XML structure
    */
-  public async add(citation: ZoteroItemData): Promise<void> {
-    await PowerPoint.run(async (context) => {
-      const xmlPart = await this.getOrCreateCustomXmlPart(context);
-
-      let xmlContent = await this.getXmlContent(context, xmlPart);
-
-      // Remove existing citation with same key (simple string replacement)
-      const citationRegex = new RegExp(`<citation key="${citation.key}"[^>]*>.*?</citation>`, "g");
-      xmlContent = xmlContent.replace(citationRegex, "");
-
-      // Add new citation before closing tag
-      const citationXml = this.citationToXml(citation);
-      xmlContent = xmlContent.replace(`</${this.xmlPartId}>`, `${citationXml}</${this.xmlPartId}>`);
-
-      // Update the XML part
-      xmlPart.setXml(xmlContent);
-      await context.sync();
-
-      console.log(`Citation added: ${citation.key}`);
-    });
+  private async getCitationStoreXml(
+    context: PowerPoint.RequestContext,
+    xmlPart?: PowerPoint.CustomXmlPart
+  ): Promise<CitationStoreXml> {
+    xmlPart = xmlPart ?? (await this.getOrCreateCustomXmlPart(context));
+    const xmlContent = await this.xmlPartToString(context, xmlPart);
+    const parsedXml = this.xmlParser.parse(xmlContent) as any;
+    const storeXml = parsedXml[this.xmlPartId] ?? {
+      "@_xmlns": CITATION_XML_NAMESPACE,
+      citations: { citation: [] },
+      version: 1,
+    };
+    if (!storeXml.citations) {
+      storeXml.citations = { citation: [] };
+    } else if (!storeXml.citations.citation) {
+      storeXml.citations.citation = [];
+    } else if (!Array.isArray(storeXml.citations.citation)) {
+      storeXml.citations.citation = [storeXml.citations.citation];
+    }
+    // Ensure creators is always an array
+    for (const citation of storeXml.citations.citation) {
+      if (citation.creators && !Array.isArray(citation.creators)) {
+        citation.creators = [citation.creators];
+      }
+    }
+    return storeXml as CitationStoreXml;
   }
 
   /**
-   * Get a citation by key
+   * Save the citation store XML structure back to the document
    */
-  public async get(key: string): Promise<ZoteroItemData | null> {
-    return await PowerPoint.run(async (context) => {
-      const xmlPart = await this.getOrCreateCustomXmlPart(context);
-      const xmlContent = await this.getXmlContent(context, xmlPart);
+  private async saveCitationStoreXml(
+    context: PowerPoint.RequestContext,
+    newXmlContent: CitationStoreXml,
+    xmlPart?: PowerPoint.CustomXmlPart
+  ): Promise<void> {
+    xmlPart = xmlPart ?? (await this.getOrCreateCustomXmlPart(context));
+    try {
+      const rootObj = { [this.xmlPartId]: newXmlContent };
+      const updatedXml = this.xmlBuilder.build(rootObj);
+      xmlPart.setXml(updatedXml);
+      await context.sync();
+    } catch (error) {
+      throw new Error(`Failed to save store XML: ${error}`);
+    }
+  }
 
+  /**
+   * Add a citation to the store using fast-xml-parser
+   */
+  public async add(citation: ZoteroItemData): Promise<void> {
+    await PowerPoint.run(async (context) => {
       try {
-        // Use regex to find the citation
-        const citationRegex = new RegExp(`<citation key="${key}"[^>]*>(.*?)</citation>`, "g");
-        const match = citationRegex.exec(xmlContent);
+        const xmlPart = await this.getOrCreateCustomXmlPart(context);
+        const storeXml = await this.getCitationStoreXml(context, xmlPart);
 
-        if (match) {
-          return this.xmlToCitation(match[0]);
-        } else {
-          return null;
-        }
+        // Remove existing citation with same key
+        storeXml.citations.citation = storeXml.citations.citation.filter(
+          (existingCitation) => existingCitation.key.toString() !== citation.key
+        );
+
+        // Add the new citation
+        storeXml.citations.citation.push(citation);
+
+        // Save the updated store structure
+        await this.saveCitationStoreXml(context, storeXml, xmlPart);
+
+        console.log(`Citation added: ${citation.key}`);
       } catch (error) {
-        throw new Error(`Failed to parse XML: ${error}`);
+        throw new Error(`Failed to add citation: ${error}`);
       }
     });
   }
 
   /**
-   * Get all citations from the store
+   * Get a citation by key using the new CitationStoreXml schema
+   */
+  public async get(key: string): Promise<ZoteroItemData | null> {
+    try {
+      const citations = await this.getAll();
+      // Find the citation with the matching key
+      const citation = citations.find((cit) => cit.key.toString() === key);
+
+      return citation ?? null;
+    } catch (error) {
+      throw new Error(`Failed to get citation: ${error}`);
+    }
+  }
+
+  /**
+   * Get all citations from the store using the new CitationStoreXml schema
    */
   public async getAll(): Promise<ZoteroItemData[]> {
     return await PowerPoint.run(async (context) => {
-      // Get XML content
-      const xmlPart = await this.getOrCreateCustomXmlPart(context);
-      const xmlData = xmlPart.getXml();
-      await context.sync();
-      // eslint-disable-next-line office-addins/load-object-before-read
-      const xmlContent = xmlData.value;
-
       try {
-        const citations: ZoteroItemData[] = [];
-        const citationRegex = /<citation key="[^"]*"[^>]*>[\s\S]*?<\/citation>/g;
-        const matches = xmlContent.match(citationRegex);
+        const xmlPart = await this.getOrCreateCustomXmlPart(context);
+        const storeXml = await this.getCitationStoreXml(context, xmlPart);
 
-        if (matches) {
-          matches.forEach((match) => {
-            try {
-              const citation = this.xmlToCitation(match);
-              citations.push(citation);
-            } catch (parseError) {
-              console.warn("Failed to parse citation:", parseError);
-            }
-          });
-        }
-
-        return citations;
+        // Return all citation data from the store
+        return storeXml.citations.citation;
       } catch (error) {
-        throw new Error(`Failed to parse XML: ${error}`);
+        throw new Error(`Failed to get all citations: ${error}`);
       }
     });
   }
@@ -256,196 +298,47 @@ export class CitationStore {
   }
 
   /**
-   * Remove a citation by key
+   * Remove a citation by key using the new CitationStoreXml schema
    */
   public async remove(key: string): Promise<boolean> {
     return await PowerPoint.run(async (context) => {
-      // Find the XML part
-      const customXmlParts = context.presentation.customXmlParts;
-      customXmlParts.load("items");
-      await context.sync();
-
-      let xmlPart: PowerPoint.CustomXmlPart | null = null;
-
-      for (const part of customXmlParts.items) {
-        part.load(["namespaceUri"]);
-        // eslint-disable-next-line office-addins/no-context-sync-in-loop
-        await context.sync();
-        if (part.namespaceUri === CITATION_XML_NAMESPACE) {
-          xmlPart = part;
-          break;
-        }
-      }
-
-      if (!xmlPart) {
-        return false; // No XML part exists, so citation doesn't exist
-      }
-
-      // Get XML content
-      const xmlData = xmlPart.getXml();
-      await context.sync();
-      // eslint-disable-next-line office-addins/load-object-before-read
-      let xmlContent = xmlData.value;
-
       try {
-        const citationRegex = new RegExp(`<citation key="${key}"[^>]*>[\\s\\S]*?</citation>`, "g");
+        const xmlPart = await this.getOrCreateCustomXmlPart(context);
+        const storeXml = await this.getCitationStoreXml(context, xmlPart);
 
-        const originalLength = xmlContent.length;
-        xmlContent = xmlContent.replace(citationRegex, "");
+        // Find and remove the citation with the matching key
+        const originalLength = storeXml.citations.citation.length;
+        storeXml.citations.citation = storeXml.citations.citation.filter(
+          (cit) => cit.key.toString() !== key
+        );
 
-        if (xmlContent.length < originalLength) {
-          // Citation was found and removed
-          xmlPart.setXml(xmlContent);
-          await context.sync();
+        if (storeXml.citations.citation.length < originalLength) {
+          // Citation was found and removed, save the updated store
+          await this.saveCitationStoreXml(context, storeXml, xmlPart);
           return true;
         } else {
           return false; // Citation not found
         }
       } catch (error) {
-        throw new Error(`Failed to process XML: ${error}`);
+        throw new Error(`Failed to remove citation: ${error}`);
       }
     });
   }
 
   /**
-   * Helper method to create citation XML string
+   * Clear all citations from the store
    */
-  private citationToXml(citation: ZoteroItemData): string {
-    let xml = `<citation key="${citation.key}">`;
-    xml += `<title>${this.escapeXml(citation.title)}</title>`;
-    xml += `<authors>`;
-    citation.creators.forEach((creator) => {
-      const name =
-        creator.firstName && creator.lastName
-          ? `${creator.firstName} ${creator.lastName}`
-          : creator.lastName || creator.firstName || creator.name || "";
-      xml += `<author>${this.escapeXml(name)}</author>`;
+  public async clearStore(): Promise<void> {
+    await PowerPoint.run(async (context) => {
+      try {
+        const xmlPart = await this.getOrCreateCustomXmlPart(context);
+        xmlPart.delete();
+        await context.sync();
+        console.log("All citations cleared.");
+      } catch (error) {
+        throw new Error(`Failed to clear citations: ${error}`);
+      }
     });
-    xml += `</authors>`;
-
-    // Extract year from date field
-    const year = citation.date ? new Date(citation.date).getFullYear() || 0 : 0;
-    xml += `<year>${year}</year>`;
-
-    if (citation.publicationTitle) {
-      xml += `<journal>${this.escapeXml(citation.publicationTitle)}</journal>`;
-    }
-    if (citation.DOI) {
-      xml += `<doi>${this.escapeXml(citation.DOI)}</doi>`;
-    }
-    if (citation.url) {
-      xml += `<url>${this.escapeXml(citation.url)}</url>`;
-    }
-    if (citation.abstractNote) {
-      xml += `<abstract>${this.escapeXml(citation.abstractNote)}</abstract>`;
-    }
-    if (citation.tags && citation.tags.length > 0) {
-      xml += `<tags>`;
-      citation.tags.forEach((tag) => {
-        xml += `<tag>${this.escapeXml(tag.tag)}</tag>`;
-      });
-      xml += `</tags>`;
-    }
-
-    xml += `</citation>`;
-    return xml;
-  }
-
-  /**
-   * Helper method to escape XML special characters
-   */
-  private escapeXml(text: string): string {
-    return text
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;");
-  }
-
-  /**
-   * Parse citation data from XML string
-   */
-  private xmlToCitation(xmlString: string): ZoteroItemData {
-    // Extract key from citation tag
-    const keyMatch = xmlString.match(/key="([^"]*)"/);
-    const key = keyMatch ? keyMatch[1] : "";
-
-    // Extract title
-    const titleMatch = xmlString.match(/<title>([\s\S]*?)<\/title>/);
-    const title = titleMatch ? titleMatch[1] : "";
-
-    // Extract year
-    const yearMatch = xmlString.match(/<year>(\d+)<\/year>/);
-    const year = yearMatch ? parseInt(yearMatch[1]) : 0;
-
-    // Extract authors using a simple approach
-    const creators: ZoteroCreator[] = [];
-    const authorsMatch = xmlString.match(/<authors>([\s\S]*?)<\/authors>/);
-    if (authorsMatch) {
-      const authorsContent = authorsMatch[1];
-      const authorRegex = /<author>([\s\S]*?)<\/author>/g;
-      let authorMatch;
-      while ((authorMatch = authorRegex.exec(authorsContent)) !== null) {
-        const authorName = authorMatch[1];
-        // Simple parsing - try to split first and last name
-        const nameParts = authorName.trim().split(" ");
-        if (nameParts.length > 1) {
-          creators.push({
-            creatorType: "author",
-            firstName: nameParts.slice(0, -1).join(" "),
-            lastName: nameParts[nameParts.length - 1],
-          });
-        } else {
-          creators.push({
-            creatorType: "author",
-            lastName: authorName,
-          });
-        }
-      }
-    }
-
-    const citation: ZoteroItemData = {
-      key,
-      version: 1,
-      itemType: "journal-article", // Default type
-      title,
-      creators,
-      date: year ? `${year}-01-01` : "",
-      tags: [],
-      collections: [],
-      relations: {},
-      dateAdded: new Date().toISOString(),
-      dateModified: new Date().toISOString(),
-    };
-
-    // Extract optional fields
-    const journalMatch = xmlString.match(/<journal>([\s\S]*?)<\/journal>/);
-    if (journalMatch) citation.publicationTitle = journalMatch[1];
-
-    const doiMatch = xmlString.match(/<doi>([\s\S]*?)<\/doi>/);
-    if (doiMatch) citation.DOI = doiMatch[1];
-
-    const urlMatch = xmlString.match(/<url>([\s\S]*?)<\/url>/);
-    if (urlMatch) citation.url = urlMatch[1];
-
-    const abstractMatch = xmlString.match(/<abstract>([\s\S]*?)<\/abstract>/);
-    if (abstractMatch) citation.abstractNote = abstractMatch[1];
-
-    // Extract tags
-    const tagsMatch = xmlString.match(/<tags>([\s\S]*?)<\/tags>/);
-    if (tagsMatch) {
-      const tags: ZoteroTag[] = [];
-      const tagsContent = tagsMatch[1];
-      const tagRegex = /<tag>([\s\S]*?)<\/tag>/g;
-      let tagMatch;
-      while ((tagMatch = tagRegex.exec(tagsContent)) !== null) {
-        tags.push({ tag: tagMatch[1] });
-      }
-      if (tags.length > 0) citation.tags = tags;
-    }
-
-    return citation;
   }
 }
 

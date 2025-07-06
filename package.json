@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "core-js": "^3.36.0",
+    "fast-xml-parser": "^5.2.5",
     "regenerator-runtime": "^0.14.1",
     "zotero-api-client": "^0.47.0"
   },
