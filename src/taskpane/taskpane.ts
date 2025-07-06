@@ -4,7 +4,7 @@
  */
 
 import { ZoteroItemData } from "zotero-api-client";
-import { ZoteroLibrary, TitleCreatorDate } from "../zotero/zotero-connector";
+import { ZoteroLibrary } from "../zotero/zotero-connector";
 import { CitationStore } from "../zotero/citation-store";
 import {
   getCitationsOnSlide,
@@ -94,7 +94,7 @@ function initializeZoteroUI() {
   if (insertMockCitationButton) {
     insertMockCitationButton.onclick = () => {
       insertCitation({
-        key: "123456",
+        key: "1234ABCD",
         title: "Test Citation",
         creators: [{ creatorType: "author", lastName: "Smith" }],
         date: "2023-04-19",
@@ -190,7 +190,7 @@ async function testZoteroConnection() {
   }
 }
 
-function displaySearchResults(results: TitleCreatorDate[]) {
+function displaySearchResults(results: ZoteroItemData[]) {
   const resultsContainer = document.getElementById("search-results");
   if (!resultsContainer) return;
 
@@ -208,11 +208,12 @@ function displaySearchResults(results: TitleCreatorDate[]) {
           : item.creators.length == 1
             ? item.creators[0].lastName
             : "unknown";
+      const itemString = item ? JSON.stringify(item).replace(/"/g, "&quot;") : "{}";
       return `
         <div class="ms-ListItem zotero-result-item"
-             onclick="insertCitation('${item.id || "unknown"}', '${author}', '(${item.date ?? ""})')">
+             onclick="insertCitation(${itemString})">
           <div class="ms-font-m zotero-result-title">${title}</div>
-          <div class="ms-font-s zotero-result-meta">${author} (${item.date.split("-")[0]})</div>
+          <div class="ms-font-s zotero-result-meta">${author} (${item.date?.split("-")[0]})</div>
         </div>
       `;
     })

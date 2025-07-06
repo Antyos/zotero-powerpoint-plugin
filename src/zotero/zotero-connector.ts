@@ -8,7 +8,7 @@ import api, {
   MultiReadResponse,
   ZoteroApi,
   RequestOptions,
-  ZoteroCreator,
+  ZoteroItemData,
 } from "zotero-api-client";
 
 export interface ZoteroField {
@@ -16,13 +16,6 @@ export interface ZoteroField {
   citationKey: string;
   formattedText: string;
   shapeId: string;
-}
-
-export interface TitleCreatorDate {
-  id: string;
-  title: string;
-  creators: ZoteroCreator[];
-  date: string;
 }
 
 /**
@@ -172,7 +165,7 @@ export class ZoteroLibrary {
     return response.getResponseType() === "SingleReadResponse";
   }
 
-  public async quickSearch(query: string, opts?: RequestOptions): Promise<TitleCreatorDate[]> {
+  public async quickSearch(query: string, opts?: RequestOptions): Promise<ZoteroItemData[]> {
     try {
       const response = await ZoteroLibrary.getClient()
         .items()
@@ -182,12 +175,7 @@ export class ZoteroLibrary {
       if (!itemData || itemData.length === 0) {
         return [];
       }
-      return itemData.map((item) => ({
-        id: item.key,
-        title: item.title,
-        creators: item.creators,
-        date: item.date ?? "",
-      }));
+      return itemData;
     } catch (error) {
       console.error("Error performing quick search:", error);
       throw new Error(`Failed to perform quick search: ${error}`);

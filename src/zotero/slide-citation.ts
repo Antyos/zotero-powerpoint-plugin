@@ -76,15 +76,18 @@ async function getCitationTextBox(
     return copiedShape;
   }
   // Create a new text box if not found
-  const slideHeight = 540; // There is no reliable API to get slide dimensions, so we are hard-coding it for now.
+  // There is no reliable API to get slide dimensions, so we are hard-coding it for now.
+  const slideWidth = 960;
+  const slideHeight = 540;
   const boxHeight = 30;
   const newBox = shapes.addTextBox("", {
     left: 0,
     top: slideHeight - boxHeight,
-    width: 300,
+    width: slideWidth,
     height: boxHeight,
   });
   newBox.name = citationBoxName;
+  newBox.textFrame.verticalAlignment = PowerPoint.TextVerticalAlignment.bottom;
   return newBox;
 }
 
@@ -254,14 +257,9 @@ export async function showCitationsOnSlide(
 
     // Apply formatting to each segment
     for (const { segment, startIndex, endIndex } of allSegments) {
-      if (segment.bold || segment.italic) {
-        const range = citationBox.textFrame.textRange.getSubstring(
-          startIndex,
-          endIndex - startIndex
-        );
-        range.font.bold = segment.bold;
-        range.font.italic = segment.italic;
-      }
+      const range = citationBox.textFrame.textRange.getSubstring(startIndex, endIndex - startIndex);
+      range.font.bold = segment.bold;
+      range.font.italic = segment.italic;
     }
 
     await context.sync();
@@ -276,54 +274,42 @@ export async function showCitationsOnSlide(
 /**
  * Add a citation key to the current slide
  */
-
-export async function addCitationToSlide(citationKey: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    PowerPoint.run(async (context) => {
-      try {
-        const slide = await getCurrentSlide(context);
-        slide.tags.add(CITATION_TAG_KEY, citationKey);
-        await context.sync();
-        resolve();
-      } catch (error) {
-        reject(new Error(`Failed to add citation to slide: ${error}`));
-      }
-    });
-  });
+export async function addCitationToSlide(
+  citationKey: string,
+  slide?: PowerPoint.Slide
+): Promise<void> {
+  slide = slide ?? (await getCurrentSlide());
+  const context = slide.context;
+  const citationKeys = await getCitationKeysOnSlide(slide);
+  if (!citationKeys.includes(citationKey)) {
+    citationKeys.push(citationKey);
+    slide.tags.add(CITATION_TAG_KEY, citationKeys.join(","));
+  }
+  context.sync();
 }
 
 /**
  * Remove a citation key from the current slide
  */
-export async function removeCitationFromSlide(citationKey: string): Promise<boolean> {
-  return new Promise((resolve) => {
-    PowerPoint.run(async (context) => {
-      try {
-        const slide = await getCurrentSlide(context);
-
-        // Try to get and remove the specific tag
-        // Note: PowerPoint Tag API may not support direct deletion
-        // This is a workaround - we'll store an empty value to mark as deleted
-        try {
-          const citationTag = slide.tags.getItem(CITATION_TAG_KEY);
-          citationTag.load("value");
-          await context.sync();
-
-          const currentTags = citationTag.value.split(",");
-          const updatedTags = currentTags.filter((tag) => tag !== citationKey);
-          slide.tags.add(CITATION_TAG_KEY, updatedTags.join(","));
-          await context.sync();
-        } catch {
-          resolve(false);
-        }
-
-        resolve(true);
-      } catch {
-        // Any error is fine for removal
-        resolve(false);
-      }
-    });
-  });
+export async function removeCitationFromSlide(
+  citationKey: string,
+  slide?: PowerPoint.Slide
+): Promise<boolean> {
+  try {
+    slide = slide ?? (await getCurrentSlide());
+    const context = slide.context;
+    const citationKeys = await getCitationKeysOnSlide(slide);
+    if (!citationKeys.includes(citationKey)) {
+      return false;
+    }
+    citationKeys.splice(citationKeys.indexOf(citationKey), 1);
+    slide.tags.add(CITATION_TAG_KEY, citationKeys.join(","));
+    context.sync();
+    return true;
+  } catch (error) {
+    console.error("Failed to remove citation from slide:", error);
+    return false;
+  }
 }
 
 /**

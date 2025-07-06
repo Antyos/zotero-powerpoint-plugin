@@ -169,6 +169,9 @@ export class CitationStore {
     }
     // Ensure creators is always an array
     for (const citation of storeXml.citations.citation) {
+      if (citation.key && typeof citation.key !== "string") {
+        citation.key = citation.key.toString();
+      }
       if (citation.creators && !Array.isArray(citation.creators)) {
         citation.creators = [citation.creators];
       }
@@ -206,7 +209,7 @@ export class CitationStore {
 
         // Remove existing citation with same key
         storeXml.citations.citation = storeXml.citations.citation.filter(
-          (existingCitation) => existingCitation.key.toString() !== citation.key
+          (existingCitation) => existingCitation.key !== citation.key
         );
 
         // Add the new citation
@@ -231,9 +234,7 @@ export class CitationStore {
         const storeXml = await this.getCitationStoreXml(context);
 
         // Return all citation data from the store as a Map (more concise approach)
-        return new Map(
-          storeXml.citations.citation.map((citation) => [citation.key.toString(), citation])
-        );
+        return new Map(storeXml.citations.citation.map((citation) => [citation.key, citation]));
       } catch (error) {
         throw new Error(`Failed to get all citations: ${error}`);
       }
@@ -282,9 +283,7 @@ export class CitationStore {
 
         // Find and remove the citation with the matching key
         const originalLength = storeXml.citations.citation.length;
-        storeXml.citations.citation = storeXml.citations.citation.filter(
-          (cit) => cit.key.toString() !== key
-        );
+        storeXml.citations.citation = storeXml.citations.citation.filter((cit) => cit.key !== key);
 
         if (storeXml.citations.citation.length < originalLength) {
           // Citation was found and removed, save the updated store
