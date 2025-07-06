@@ -2,8 +2,13 @@ import { ZoteroItemData } from "zotero-api-client";
 import { CITATION_TAG_KEY, CitationStore } from "./citation-store";
 
 export async function getCurrentSlide(
-  context: PowerPoint.RequestContext
+  context?: PowerPoint.RequestContext
 ): Promise<PowerPoint.Slide> {
+  if (!context) {
+    return await PowerPoint.run(async (ctx) => {
+      return await getCurrentSlide(ctx);
+    });
+  }
   // Get the selected slide or fallback to first slide
   let currentSlide: PowerPoint.Slide;
 
@@ -28,6 +33,240 @@ export async function getCurrentSlide(
   }
 
   return currentSlide;
+}
+
+/**
+ * Get or create a text box for citations on the slide
+ */
+async function getCitationTextBox(
+  slide: PowerPoint.Slide,
+  citationBoxName: string = "Citations"
+): Promise<PowerPoint.Shape> {
+  const shapes = slide.shapes;
+  shapes.load("items");
+  await slide.context.sync();
+
+  for (const shape of shapes.items) {
+    shape.load("name");
+  }
+  await slide.context.sync();
+  let citationBox = shapes.items.find((shape) => shape.name === citationBoxName);
+  if (citationBox) {
+    return citationBox;
+  }
+  // Check slide master
+  const slideMaster = slide.slideMaster;
+  slideMaster.load("shapes");
+  await slide.context.sync();
+  for (const shape of slideMaster.shapes.items) {
+    shape.load("name");
+  }
+  await slide.context.sync();
+  citationBox = slideMaster.shapes.items.find((shape) => shape.name === citationBoxName);
+  if (citationBox) {
+    // Reveal the shape on the slide by copying it
+    const copiedShape = slide.shapes.addTextBox("", {
+      left: citationBox.left,
+      top: citationBox.top,
+      width: citationBox.width,
+      height: citationBox.height,
+    });
+    copiedShape.name = citationBoxName;
+    await slide.context.sync();
+    return copiedShape;
+  }
+  // Create a new text box if not found
+  const slideHeight = 540; // There is no reliable API to get slide dimensions, so we are hard-coding it for now.
+  const boxHeight = 30;
+  const newBox = shapes.addTextBox("", {
+    left: 0,
+    top: slideHeight - boxHeight,
+    width: 300,
+    height: boxHeight,
+  });
+  newBox.name = citationBoxName;
+  return newBox;
+}
+
+class CitationFormatter {
+  private _format: string;
+  private _delimeter: string;
+
+  constructor(format: string, delimeter: string) {
+    // Initialization if needed
+    this._format = format;
+    this._delimeter = delimeter;
+  }
+
+  public format(citation: ZoteroItemData): FormattedText[] {
+    const year = citation.date ? citation.date.split("-")[0] : "n.d.";
+    const creator = citation.creators[0];
+    const etal = citation.creators && citation.creators.length > 1 ? " et al." : "";
+    const journalAbbreviation = citation.publicationTitle
+      ? citation.publicationTitle
+      : "Unknown Journal";
+
+    // Replace placeholders with actual values
+    let text = this._format
+      .replace("{creator.lastName}", creator?.lastName || "Unknown")
+      .replace("{creator.firstName}", creator?.firstName || "Unknown")
+      .replace("{creator.name}", creator?.name || "Unknown")
+      .replace("{title}", citation.title || "No Title")
+      .replace("{key}", citation.key)
+      .replace("{itemType}", citation.itemType || "Unknown Type")
+      .replace("{abstractNote}", citation.abstractNote || "No Abstract")
+      .replace("{publicationTitle}", citation.publicationTitle || "No Publication")
+      .replace("{volume}", citation.volume || "No Volume")
+      .replace("{issue}", citation.issue || "No Issue")
+      .replace("{pages}", citation.pages || "No Pages")
+      .replace("{publisher}", citation.publisher || "No Publisher")
+      .replace("{DOI}", citation.DOI || "No DOI")
+      .replace("{ISBN}", citation.ISBN || "No ISBN")
+      .replace("{URL}", citation.url || "No URL")
+      .replace("{accessDate}", citation.accessDate || "No Access Date")
+      .replace("{archive}", citation.archive || "No Archive")
+      .replace("{archiveLocation}", citation.archiveLocation || "No Archive Location")
+      .replace("{libraryCatalog}", citation.libraryCatalog || "No Library Catalog")
+      .replace("{callNumber}", citation.callNumber || "No Call Number")
+      .replace("{rights}", citation.rights || "No Rights Info")
+      .replace("{date}", citation.date || "No Date")
+      .replace("{extra}", citation.extra || "No Extra Info")
+      .replace("{series}", citation.series || "No Series")
+      .replace("{seriesNumber}", citation.seriesNumber || "No Series Number")
+      .replace("{institution}", citation.institution || "No Institution")
+      .replace("{department}", citation.department || "No Department")
+      .replace("{etal}", etal)
+      .replace("{year}", year)
+      .replace("{journalAbbreviation}", journalAbbreviation);
+
+    // Parse formatting tags and create formatted text segments
+    return CitationFormatter.parseFormattedText(text);
+  }
+
+  private static parseFormattedText(text: string): FormattedText[] {
+    const segments: FormattedText[] = [];
+    let currentIndex = 0;
+
+    // Regular expression to find <b>, <i>, and </b>, </i> tags
+    const formatRegex = /<(\/?)([bi])>/g;
+    let match;
+    let isBold = false;
+    let isItalic = false;
+
+    while ((match = formatRegex.exec(text)) !== null) {
+      // Add text before the tag
+      if (match.index > currentIndex) {
+        const textContent = text.substring(currentIndex, match.index);
+        if (textContent) {
+          segments.push({
+            text: textContent,
+            bold: isBold,
+            italic: isItalic,
+          });
+        }
+      }
+
+      // Update formatting state
+      const isClosing = match[1] === "/";
+      const tagType = match[2];
+
+      if (tagType === "b") {
+        isBold = !isClosing;
+      } else if (tagType === "i") {
+        isItalic = !isClosing;
+      }
+
+      currentIndex = match.index + match[0].length;
+    }
+
+    // Add remaining text
+    if (currentIndex < text.length) {
+      const remainingText = text.substring(currentIndex);
+      if (remainingText) {
+        segments.push({
+          text: remainingText,
+          bold: isBold,
+          italic: isItalic,
+        });
+      }
+    }
+
+    return segments;
+  }
+
+  public get delimeter(): string {
+    return this._delimeter;
+  }
+}
+
+interface FormattedText {
+  text: string;
+  bold: boolean;
+  italic: boolean;
+}
+
+export async function showCitationsOnSlide(
+  slide?: PowerPoint.Slide,
+  format: string = "<b>{creator.lastName}</b>{etal}, {year}, <i>{journalAbbreviation}</i>",
+  delimeter: string = ";  "
+): Promise<void> {
+  const citationFormatter = new CitationFormatter(format, delimeter);
+  return await PowerPoint.run(async (context) => {
+    slide = slide ?? (await getCurrentSlide(context));
+    const citationKeys = await getCitationKeysOnSlide(slide);
+    const citations = await CitationStore.getInstance().getItem(citationKeys);
+    const citationBox = await getCitationTextBox(slide);
+
+    // Build the complete text first, then apply formatting
+    let completeText = "";
+    const allSegments: Array<{ segment: FormattedText; startIndex: number; endIndex: number }> = [];
+
+    for (const [index, citation] of citations.entries()) {
+      if (!citation) {
+        continue;
+      }
+      const formattedSegments = citationFormatter.format(citation);
+
+      for (const segment of formattedSegments) {
+        const startIndex = completeText.length;
+        completeText += segment.text;
+        const endIndex = completeText.length;
+
+        allSegments.push({
+          segment,
+          startIndex,
+          endIndex,
+        });
+      }
+
+      if (index < citations.length - 1) {
+        allSegments.push({
+          segment: { text: citationFormatter.delimeter, bold: false, italic: false },
+          startIndex: completeText.length,
+          endIndex: completeText.length + citationFormatter.delimeter.length,
+        });
+        completeText += citationFormatter.delimeter;
+      }
+    }
+
+    // Set the complete text
+    citationBox.textFrame.textRange.text = completeText;
+
+    // Apply formatting to each segment
+    for (const { segment, startIndex, endIndex } of allSegments) {
+      if (segment.bold || segment.italic) {
+        const range = citationBox.textFrame.textRange.getSubstring(
+          startIndex,
+          endIndex - startIndex
+        );
+        range.font.bold = segment.bold;
+        range.font.italic = segment.italic;
+      }
+    }
+
+    await context.sync();
+    console.log(`Citations on current slide: ${citationKeys.join(", ")}`);
+  });
 }
 
 /**
@@ -110,28 +349,28 @@ export async function debugSlideTags(): Promise<void> {
 /**
  * Get all citation keys from the current slide
  */
-export async function getCitationKeysOnSlide(
-  slide: PowerPoint.Slide | "current"
-): Promise<string[]> {
-  return await PowerPoint.run(async (context) => {
-    if (slide === "current") {
-      slide = await getCurrentSlide(context);
-    }
-    const tags = slide.tags;
-    await context.sync();
-    // console.log(`Slide Tags: ${JSON.stringify(tags, null, 2)}`);
-    const citationTag = tags.getItemOrNullObject(CITATION_TAG_KEY);
-    citationTag.load("value");
-    await context.sync();
+export async function getCitationKeysOnSlide(slide?: PowerPoint.Slide): Promise<string[]> {
+  if (!slide) {
+    slide = await getCurrentSlide();
+  }
+  // Having a separate variable for context makes TypeScript happy
+  const context = slide.context;
+  const tags = slide.tags;
+  await context.sync();
+  // console.log(`Slide Tags: ${JSON.stringify(tags, null, 2)}`);
+  const citationTag = tags.getItemOrNullObject(CITATION_TAG_KEY);
+  // const citationTag = tags.getItem("foo");
+  citationTag.load("value");
+  await context.sync();
 
-    if (citationTag.isNullObject || !citationTag.value) {
-      return []; // No citations on this slide
-    }
+  console.log("Citation Tag:", citationTag);
+  if (citationTag.isNullObject || !citationTag.value) {
+    return []; // No citations on this slide
+  }
 
-    const tagValue = citationTag.value;
-    // Split the tag value by commas to get individual citation keys
-    return tagValue.split(",");
-  });
+  const tagValue = citationTag.value;
+  // Split the tag value by commas to get individual citation keys
+  return tagValue.split(",");
 }
 
 /**
@@ -156,7 +395,7 @@ export async function insertCitationOnSlide(citation: ZoteroItemData): Promise<v
  */
 export async function getCitationsOnSlide(): Promise<ZoteroItemData[]> {
   const store = CitationStore.getInstance();
-  const citationKeys = await getCitationKeysOnSlide("current");
+  const citationKeys = await getCitationKeysOnSlide();
 
   const citations: ZoteroItemData[] = [];
   for (const key of citationKeys) {

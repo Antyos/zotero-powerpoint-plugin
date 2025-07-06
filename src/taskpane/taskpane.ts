@@ -11,6 +11,7 @@ import {
   insertCitationOnSlide,
   debugSlideTags,
   removeCitationFromSlide,
+  showCitationsOnSlide,
 } from "../zotero/slide-citation";
 
 Office.onReady((info) => {
@@ -242,6 +243,7 @@ async function updateCitationsPanel() {
       console.log(`Found ${citations.length} citations in current slide.`);
       console.log(citations);
       displayCitationsOnTaskpane(citations);
+      await showCitationsOnSlide();
     });
   } catch (error) {
     console.error("Error loading citations:", error);
