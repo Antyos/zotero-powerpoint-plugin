@@ -305,6 +305,7 @@ export async function removeCitationFromSlide(
     citationKeys.splice(citationKeys.indexOf(citationKey), 1);
     slide.tags.add(CITATION_TAG_KEY, citationKeys.join(","));
     context.sync();
+    CitationStore.getInstance().prune();
     return true;
   } catch (error) {
     console.error("Failed to remove citation from slide:", error);

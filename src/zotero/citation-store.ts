@@ -313,4 +313,40 @@ export class CitationStore {
       }
     });
   }
+
+  /**
+   * Prune citations that are no longer referenced by any slide
+   */
+  public async prune(): Promise<number> {
+    return await PowerPoint.run(async (context) => {
+      const slides = context.presentation.slides;
+      const usedKeys = new Set<string>();
+      slides.load("items/tags");
+      await context.sync();
+      const citationTags = [];
+      for (const slide of context.presentation.slides.items) {
+        const citationTag = slide.tags.getItemOrNullObject(CITATION_TAG_KEY);
+        citationTag.load("value");
+        citationTags.push(citationTag);
+      }
+      await context.sync();
+      for (const citationTag of citationTags) {
+        if (citationTag.isNullObject || !citationTag.value) {
+          continue; // No citations on this slide
+        }
+        for (const tag of citationTag.value.split(",")) {
+          usedKeys.add(tag);
+        }
+      }
+      await context.sync();
+      const xmlPart = await this.getOrCreateCustomXmlPart(context);
+      const storeXml = await this.getCitationStoreXml(context, xmlPart);
+      const originalCount = storeXml.citations.citation.length;
+      storeXml.citations.citation = storeXml.citations.citation.filter((cit) =>
+        usedKeys.has(cit.key)
+      );
+      await this.saveCitationStoreXml(context, storeXml, xmlPart);
+      return originalCount - storeXml.citations.citation.length;
+    });
+  }
 }
