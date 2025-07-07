@@ -75,7 +75,18 @@ ul {
   padding: 8px 4px 8px 8px;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+}
+
+.header-settings-btn .ms-Icon {
+  font-size: 14px;
+  height: 1em;
+  width: 1em;
+  vertical-align: baseline;
+  margin-top: 1px;
 }
 
 .header-settings-btn:hover {
@@ -85,11 +96,6 @@ ul {
 .header-settings-btn:focus {
   outline: 2px solid #0078d7;
   outline-offset: 2px;
-}
-
-.zotero-search-section {
-  margin-top: 10px;
-  width: 100%;
 }
 
 .ms-welcome__main {
@@ -146,6 +152,11 @@ b {
 }
 
 /* Zotero Integration Styles */
+.zotero-search-section {
+  margin-top: 10px;
+  width: 100%;
+}
+
 .zotero-section {
   margin-bottom: 20px;
 }
@@ -163,7 +174,7 @@ b {
 }
 
 .zotero-search-field {
-  margin-bottom: 15px;
+  margin-bottom: 0.5em;
 }
 
 .zotero-search-input {
@@ -177,13 +188,13 @@ b {
 }
 
 .zotero-button-secondary {
-  margin-left: 10px;
+  margin-left: 0.5em;
 }
 
-.zotero-results {
+.zotero-slide-citations-container {
   overflow-y: auto;
   border: 1px solid #ddd;
-  padding: 15px;
+  padding: 0.1em;
   width: 100%;
   box-sizing: border-box;
   flex: 1;
@@ -219,11 +230,15 @@ b {
   display: none;
 }
 
+.hidden {
+  display: none !important;
+}
+
 .citation-item {
   margin-bottom: 0px;
   padding: 12px;
   border-radius: 0px;
-  border-left: 3px solid #0078d7;
+  /* border-left: 3px solid #0078d7; */
   background-color: #f8f9fa;
   position: relative;
   display: flex;

@@ -365,7 +365,8 @@ function displayCitationsOnTaskpane(citations: ZoteroItemData[]) {
   if (!citationsContainer) return;
 
   if (citations.length === 0) {
-    citationsContainer.innerHTML = '<p class="ms-font-s">No citations found in current slide.</p>';
+    citationsContainer.innerHTML =
+      '<p class="ms-font-s" style="margin-left: 8px;">No citations found in current slide.</p>';
     return;
   }
 

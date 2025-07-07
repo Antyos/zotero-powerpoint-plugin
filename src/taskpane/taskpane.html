@@ -67,10 +67,9 @@
       <section class="ms-Grid zotero-search-section">
         <div class="ms-Grid-row">
           <div class="ms-Grid-col ms-sm12">
-            <h3 class="ms-font-l">Search Zotero Library</h3>
+            <h2 class="ms-font-l">Search Zotero Library</h2>
             <div class="zotero-search-dropdown">
               <div class="ms-TextField zotero-search-field">
-                <label class="ms-Label">Search Query:</label>
                 <input
                   id="search-query"
                   type="text"
@@ -93,11 +92,21 @@
       <section class="ms-Grid">
         <div class="ms-Grid-row">
           <div class="ms-Grid-col ms-sm12">
-            <h3 class="ms-font-l">Citations in Current Slide</h3>
-            <div class="zotero-button-group">
-              <button id="refresh-citations" class="ms-Button">
-                <span class="ms-Button-label">Refresh Citations</span>
-              </button>
+            <div class="header-content">
+              <div class="header-left">
+                <h3 class="ms-font-l">Citations in Current Slide</h3>
+              </div>
+              <div class="header-right">
+                <button
+                  id="refresh-citations"
+                  class="ms-Button header-settings-btn"
+                  title="Refresh citations on current slide"
+                >
+                  <i class="ms-Icon ms-Icon--Refresh"></i>
+                </button>
+              </div>
+            </div>
+            <div id="debug-citations-buttons" class="zotero-button-group hidden">
               <button id="insert-mock-citation" class="ms-Button zotero-button-secondary">
                 <span class="ms-Button-label">Insert Mock Citation</span>
               </button>
@@ -114,7 +123,8 @@
                 <span class="ms-Button-label">Clear Citation Store</span>
               </button>
             </div>
-            <div id="current-citations" class="ms-List zotero-results">
+            <!-- Current Citations Container -->
+            <div id="current-citations" class="ms-List zotero-slide-citations-container">
               <p class="ms-font-s">No citations found in current slide.</p>
             </div>
           </div>
