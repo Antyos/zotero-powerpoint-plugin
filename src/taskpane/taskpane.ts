@@ -55,7 +55,7 @@ function initializeZoteroUI() {
   }
 
   if (refreshCitationsButton) {
-    refreshCitationsButton.onclick = updateCitationsPanel;
+    refreshCitationsButton.onclick = () => updateCitationsPanel(false);
   }
 
   if (debugSlideTagsButton) {
@@ -352,7 +352,7 @@ async function removeCitation(citationId: string) {
 }
 (window as any).removeCitation = removeCitation;
 
-async function updateCitationsPanel() {
+async function updateCitationsPanel(updateSlide: boolean = true) {
   try {
     console.log("Loading current citations from slide...");
     await PowerPoint.run(async (_context) => {
@@ -360,7 +360,9 @@ async function updateCitationsPanel() {
       console.log(`Found ${citations.length} citations in current slide.`);
       console.log(citations);
       displayCitationsOnTaskpane(citations);
-      await showCitationsOnSlide();
+      if (updateSlide) {
+        await showCitationsOnSlide();
+      }
     });
   } catch (error) {
     console.error("Error loading citations:", error);
