@@ -56,7 +56,7 @@ function initializeZoteroUI() {
   }
 
   if (refreshCitationsButton) {
-    refreshCitationsButton.onclick = () => updateCitationsPanel(false);
+    refreshCitationsButton.onclick = () => updateCitationsPanel(true);
   }
 
   if (debugSlideTagsButton) {
@@ -222,7 +222,7 @@ function initializeZoteroUI() {
   }
 
   // Load current citations on initialization
-  updateCitationsPanel();
+  updateCitationsPanel(false);
 }
 
 async function configureZotero() {
