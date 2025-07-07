@@ -14,6 +14,7 @@ async function getHttpsOptions() {
 
 module.exports = async (env, options) => {
   const dev = options.mode === "development";
+  /** @type {import('webpack').Configuration} */
   const config = {
     devtool: "source-map",
     entry: {
