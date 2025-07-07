@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="128"
+   height="128"
+   viewBox="0 0 18.285714 18.285714"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4.2 (f4327f4, 2025-05-13)"
+   sodipodi:docname="logo.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="4.3742212"
+     inkscape:cx="43.664915"
+     inkscape:cy="57.838867"
+     inkscape:window-width="1920"
+     inkscape:window-height="1112"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1">
+    <inkscape:path-effect
+       effect="fillet_chamfer"
+       id="path-effect1"
+       is_visible="true"
+       lpeversion="1"
+       nodesatellites_param="F,0,0,1,0,0.99999998,0,1 @ F,0,0,1,0,0.99999998,0,1 @ F,0,0,1,0,0.99999998,0,1 @ F,0,0,1,0,0.99999998,0,1 @ F,0,0,1,0,0.99999998,0,1 @ F,0,0,1,0,0.99999998,0,1"
+       radius="7"
+       unit="px"
+       method="auto"
+       mode="F"
+       chamfer_steps="1"
+       flexible="false"
+       use_knot_distance="true"
+       apply_no_radius="true"
+       apply_with_radius="true"
+       only_selected="false"
+       hide_knots="false" />
+    <filter
+       style="color-interpolation-filters:sRGB;"
+       inkscape:label="Drop Shadow"
+       id="filter12"
+       x="-0.046349696"
+       y="-0.041376183"
+       width="1.0926994"
+       height="1.1114858">
+      <feFlood
+         result="flood"
+         in="SourceGraphic"
+         flood-opacity="0.40000000000000002"
+         flood-color="rgb(0,0,0)"
+         id="feFlood11" />
+      <feGaussianBlur
+         result="blur"
+         in="SourceGraphic"
+         stdDeviation="0.29999999999999999"
+         id="feGaussianBlur11" />
+      <feOffset
+         result="offset"
+         in="blur"
+         dx="0.000000"
+         dy="0.5"
+         id="feOffset11" />
+      <feComposite
+         result="comp1"
+         operator="in"
+         in="flood"
+         in2="offset"
+         id="feComposite11" />
+      <feComposite
+         result="comp2"
+         operator="over"
+         in="SourceGraphic"
+         in2="comp1"
+         id="feComposite12" />
+    </filter>
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <g
+       id="g1"
+       transform="matrix(0.92713919,0,0,0.92713919,0.55003257,0.70258638)">
+      <path
+         sodipodi:type="star"
+         style="fill:#e3e3e3;fill-opacity:1;stroke:none;stroke-width:0.280225;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;filter:url(#filter12)"
+         id="path1"
+         inkscape:flatsided="true"
+         sodipodi:sides="6"
+         sodipodi:cx="68.1688"
+         sodipodi:cy="28.368383"
+         sodipodi:r1="8.9686069"
+         sodipodi:r2="7.7670412"
+         sodipodi:arg1="1.5707963"
+         sodipodi:arg2="2.0943951"
+         inkscape:rounded="0"
+         inkscape:randomized="0"
+         d="m 67.302775,36.83699 -6.034991,-3.484303 a 1.7320508,1.7320508 59.999998 0 1 -0.866025,-1.5 l 0,-6.968607 a 1.7320508,1.7320508 120 0 1 0.866025,-1.5 l 6.034991,-3.484304 a 1.7320508,1.7320508 180 0 1 1.732051,0 l 6.03499,3.484304 a 1.7320508,1.7320508 59.999998 0 1 0.866026,1.5 l 0,6.968607 a 1.7320508,1.7320508 120 0 1 -0.866025,1.5 l -6.034991,3.484303 a 1.7320508,1.7320508 180 0 1 -1.732051,0 z"
+         inkscape:path-effect="#path-effect1"
+         transform="translate(-58.900694,-19.225526)" />
+      <text
+         xml:space="preserve"
+         style="font-size:12.7px;text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#e3e3e3;fill-opacity:1;stroke:none;stroke-width:0.280001;stroke-linecap:round;stroke-linejoin:round"
+         x="5.5179162"
+         y="14.023619"
+         id="text1"><tspan
+           sodipodi:role="line"
+           id="tspan1"
+           style="font-weight:bold;font-size:12.7px;fill:#a81717;fill-opacity:1;stroke-width:0.28"
+           x="5.5179162"
+           y="14.023619">P</tspan></text>
+    </g>
+  </g>
+</svg>
