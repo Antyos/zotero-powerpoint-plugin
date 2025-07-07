@@ -278,7 +278,7 @@ interface FormattedText {
   italic: boolean;
 }
 
-export async function _showCitationsOnSlide(
+export async function showCitationsOnSlide(
   slide: PowerPoint.Slide,
   formatter?: CitationFormatter,
   allCitations?: Map<string, ZoteroItemData>,
@@ -302,12 +302,8 @@ export async function _showCitationsOnSlide(
     return false;
   }
   if (!formatter) {
-    const config = ZoteroLibrary.getInstance().getConfig();
-    const citationFormat = config.citationFormats?.[config.selectedCitationFormat || ""] || {
-      format: "<b>{creator.lastName}</b>{etal}, {year}, <i>{journalAbbreviation}</i>",
-      delimiter: ";  ",
-    };
-    formatter = new CitationFormatter(citationFormat);
+    const config = ZoteroLibrary.getInstance().getCitationFormat();
+    formatter = new CitationFormatter(config);
   }
 
   // Build the complete text first, then apply formatting
@@ -352,21 +348,6 @@ export async function _showCitationsOnSlide(
     range.font.italic = segment.italic;
   }
   return true;
-}
-
-export async function showCitationsOnSlide(
-  slide?: PowerPoint.Slide,
-  format: string = "<b>{creator.lastName}</b>{etal}, {year}, <i>{journalAbbreviation}</i>",
-  delimiter: string = ";  "
-): Promise<void> {
-  const citationFormatter = new CitationFormatter({ format, delimiter });
-  return await PowerPoint.run(async (context) => {
-    slide = slide ?? (await getCurrentSlide(context));
-    // allCitations and citationShapeName will be auto-fetched inside. They are only useful to pass
-    // if we are doing a bulk operation.
-    await _showCitationsOnSlide(slide, citationFormatter);
-    await context.sync();
-  });
 }
 
 /**

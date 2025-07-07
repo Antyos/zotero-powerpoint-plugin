@@ -13,6 +13,7 @@ import {
   removeCitationFromSlide,
   showCitationsOnSlide,
   updateCitationKeysOrder,
+  getCurrentSlide,
 } from "../zotero/slide-citation";
 
 const SEARCH_DEBOUNCE_MS = 300;
@@ -355,13 +356,15 @@ async function removeCitation(citationId: string) {
 async function updateCitationsPanel(updateSlide: boolean = true) {
   try {
     console.log("Loading current citations from slide...");
-    await PowerPoint.run(async (_context) => {
+    await PowerPoint.run(async (context) => {
       const citations = await getCitationsOnSlide();
       console.log(`Found ${citations.length} citations in current slide.`);
       console.log(citations);
       displayCitationsOnTaskpane(citations);
       if (updateSlide) {
-        await showCitationsOnSlide();
+        const slide = await getCurrentSlide(context);
+        await showCitationsOnSlide(slide);
+        await context.sync();
       }
     });
   } catch (error) {

@@ -263,28 +263,15 @@ export class ZoteroLibrary {
     return !!(this.config?.apiKey && this.config?.userId);
   }
 
-  /**
-   * Get available citation formats
-   */
-  getCitationFormats(): Record<string, CitationFormat> {
-    return this.config?.citationFormats || {};
-  }
-
-  /**
-   * Get the selected citation format
-   */
-  getSelectedCitationFormat(): string | undefined {
-    return this.config?.selectedCitationFormat;
-  }
-
-  /**
-   * Set the selected citation format
-   */
-  setSelectedCitationFormat(format: string): void {
-    if (this.config) {
-      this.config.selectedCitationFormat = format;
-      this.saveConfig();
+  public getCitationFormat(): CitationFormat {
+    const defaultFormat: CitationFormat = {
+      format: "<b>{creator.lastName}</b>{etal}, {year}, <i>{journalAbbreviation}</i>",
+      delimiter: ";  ",
+    };
+    if (this.config?.selectedCitationFormat && this.config.citationFormats) {
+      return this.config.citationFormats[this.config.selectedCitationFormat] ?? defaultFormat;
     }
+    return defaultFormat;
   }
 
   /**
