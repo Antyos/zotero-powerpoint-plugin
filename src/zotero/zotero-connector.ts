@@ -40,12 +40,30 @@ const DEFAULT_CONFIG: Required<Omit<ZoteroConfig, "apiKey">> = {
   userId: 0,
   userType: "user",
   citationFormats: {
-    default: {
+    apa: {
+      format: "{creator} ({year}). {title}. <i>{journal}</i>, {volume}({issue}), {pages}.",
+      delimiter: ";  ",
+    },
+    mla: {
+      format:
+        '{creator}. "{title}." <i>{journal}</i>, vol. {volume}, no. {issue}, {year}, pp. {pages}.',
+      delimiter: ";  ",
+    },
+    chicago: {
+      format: '{creator}. "{title}." <i>{journal}</i> {volume}, no. {issue} ({year}): {pages}.',
+      delimiter: ";  ",
+    },
+    ieee: {
+      format:
+        '{creator}, "{title}," <i>{journal}</i>, vol. {volume}, no. {issue}, pp. {pages}, {year}.',
+      delimiter: ";  ",
+    },
+    custom: {
       format: "<b>[{#}] {creator}</b>, {year}, <i>{journalAbbreviation}</i>",
       delimiter: ";  ",
     },
   },
-  selectedCitationFormat: "default",
+  selectedCitationFormat: "ieee",
   searchResultsLimit: 5,
   citationShapeName: "Citation",
 };
