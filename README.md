@@ -15,7 +15,20 @@ configuration.
 
 ### Installation
 
-1. Install the add-in to PowerPoint.
+These are temporary instructions until the add-in is published to Microsoft AppSource.
+
+For the full instructions see: <https://learn.microsoft.com/en-us/office/dev/add-ins/testing/create-a-network-shared-folder-catalog-for-task-pane-and-content-add-ins>
+
+1. Download the `dist/` folder and extract it to a local directory.
+2. Create a local network share for the extracted folder by right clicking on
+   the folder in Windows Explorer, clicking **Properties > Sharing > Share** and
+   click "Share". (You might need to add "Everyone" with "Read/Write"
+   permissions). Copy the shared folder path, e.g.
+   `file://C:/Users/YourName/Documents/ZoteroPowerPointAddin/dist/`.
+3. Open PowerPoint and go to **File > Options > Trust Center > Trust Center Settings > Trusted Add-in Catalogs**. Paste the shared folder path into the "Catalog Url" box and click "Add catalog". Make sure to click the "Show in Menu" checkbox.
+4. Restart PowerPoint.
+5. On the ribbon, go to "Home > Add-ins". Click "Advanced" at the bottom left,
+   and select the add-in.
 
 ### Setup Zotero API Key
 

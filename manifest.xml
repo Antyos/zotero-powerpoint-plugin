@@ -5,7 +5,7 @@
   xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="TaskPaneApp">
   <Id>89f9b0bf-37dd-4823-b1c3-a4b8125db554</Id>
   <Version>0.1.0.0</Version>
-  <ProviderName>Contoso</ProviderName>
+  <ProviderName>Antyos</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="Zotero Powerpoint Integration" />
   <Description DefaultValue="A template to get started." />
