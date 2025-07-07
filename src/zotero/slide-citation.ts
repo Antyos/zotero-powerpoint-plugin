@@ -55,24 +55,52 @@ async function getCitationTextBox(
   if (citationBox) {
     return citationBox;
   }
-  // Check slide master
-  const slideMaster = slide.slideMaster;
-  slideMaster.load("shapes");
+  // Check the slide layout master for a hidden citation box
+  const slideLayout = slide.layout;
+  slideLayout.load("shapes");
   await slide.context.sync();
-  for (const shape of slideMaster.shapes.items) {
+  for (const shape of slideLayout.shapes.items) {
     shape.load("name");
   }
   await slide.context.sync();
-  citationBox = slideMaster.shapes.items.find((shape) => shape.name === citationBoxName);
-  if (citationBox) {
+  const layoutShape = slideLayout.shapes.items.find((shape) => shape.name === citationBoxName);
+  if (layoutShape) {
     // Reveal the shape on the slide by copying it
     const copiedShape = slide.shapes.addTextBox("", {
-      left: citationBox.left,
-      top: citationBox.top,
-      width: citationBox.width,
-      height: citationBox.height,
+      left: layoutShape.left,
+      top: layoutShape.top,
+      width: layoutShape.width,
+      height: layoutShape.height,
     });
     copiedShape.name = citationBoxName;
+    const layoutTextFrame = layoutShape.textFrame;
+    const layoutFont = layoutShape.textFrame.textRange.font;
+    layoutTextFrame.load([
+      "autoSizeSetting",
+      "verticalAlignment",
+      "topMargin",
+      "bottomMargin",
+      "leftMargin",
+      "rightMargin",
+      "wordWrap",
+    ]);
+    layoutFont.load(["name", "size", "color", "allCaps", "smallCaps"]);
+    await slide.context.sync();
+    copiedShape.textFrame.autoSizeSetting = layoutTextFrame.autoSizeSetting;
+    copiedShape.textFrame.verticalAlignment = layoutTextFrame.verticalAlignment;
+    copiedShape.textFrame.topMargin = layoutTextFrame.topMargin;
+    copiedShape.textFrame.bottomMargin = layoutTextFrame.bottomMargin;
+    copiedShape.textFrame.leftMargin = layoutTextFrame.leftMargin;
+    copiedShape.textFrame.rightMargin = layoutTextFrame.rightMargin;
+    copiedShape.textFrame.wordWrap = layoutTextFrame.wordWrap;
+    // Don't need to copy bold/italic since they will be applied to substrings
+    copiedShape.textFrame.textRange.font.name = layoutFont.name;
+    copiedShape.textFrame.textRange.font.size = layoutFont.size;
+    copiedShape.textFrame.textRange.font.color = layoutFont.color;
+    copiedShape.textFrame.textRange.font.allCaps = layoutFont.allCaps;
+    copiedShape.textFrame.textRange.font.smallCaps = layoutFont.smallCaps;
+    // Not copying over paragraph-level formatting for now because I don't feel like it.
+    // In theory, there should also be a format painter api at some point to do that.
     await slide.context.sync();
     return copiedShape;
   }
@@ -228,6 +256,15 @@ export async function showCitationsOnSlide(
     const citationKeys = await getCitationKeysOnSlide(slide);
     const citations = await CitationStore.getInstance().getItem(citationKeys);
     const citationBox = await getCitationTextBox(slide);
+
+    if (citationBox && citations.length === 0) {
+      // The API seems to be missing a hide() method, so we'll just delete it and recreate it later
+      // if needed.
+      citationBox.delete();
+      await context.sync();
+      console.log("No citations on current slide.");
+      return;
+    }
 
     // Build the complete text first, then apply formatting
     let completeText = "";
