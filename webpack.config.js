@@ -81,11 +81,6 @@ module.exports = async (env, options) => {
         chunks: ["polyfill", "commands"],
       }),
       new HtmlWebpackPlugin({
-        filename: "zotero-dialog.html",
-        template: "./src/zotero/zotero-dialog.html",
-        chunks: ["polyfill"],
-      }),
-      new HtmlWebpackPlugin({
         filename: "config-dialog.html",
         template: "./src/zotero/config-dialog.html",
         chunks: ["polyfill"],
