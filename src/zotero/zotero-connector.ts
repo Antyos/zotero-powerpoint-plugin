@@ -36,6 +36,20 @@ interface ZoteroConfig {
   citationShapeName?: string;
 }
 
+const DEFAULT_CONFIG: Omit<Required<ZoteroConfig>, "apiKey"> = {
+  userId: 0,
+  userType: "user",
+  citationFormats: {
+    default: {
+      format: "<b>[{#}] {creator}</b>, {year}, <i>{journalAbbreviation}</i>",
+      delimiter: ";  ",
+    },
+  },
+  selectedCitationFormat: "default",
+  searchResultsLimit: 5,
+  citationShapeName: "Citation",
+};
+
 /**
  * Better BibTeX Connector for Zotero PowerPoint Integration
  * Simplified version based on obsidian-zotero-integration BBT implementation
@@ -245,14 +259,14 @@ export class ZoteroLibrary {
    * Get current configuration (excluding sensitive data like API key)
    */
   getConfig(): Omit<ZoteroConfig, "apiKey"> & { hasApiKey: boolean } {
+    const mergedConfig = {
+      ...DEFAULT_CONFIG,
+      ...this.config,
+    };
+    const { apiKey, ...configWithoutApiKey } = mergedConfig;
     return {
-      userId: this.config?.userId || 0,
-      userType: this.config?.userType || "user",
-      citationFormats: this.config?.citationFormats || {},
-      selectedCitationFormat: this.config?.selectedCitationFormat || undefined,
-      searchResultsLimit: this.config?.searchResultsLimit || 5,
-      citationShapeName: this.config?.citationShapeName || "Citation",
-      hasApiKey: !!this.config?.apiKey,
+      ...configWithoutApiKey,
+      hasApiKey: !!apiKey,
     };
   }
 
@@ -264,10 +278,7 @@ export class ZoteroLibrary {
   }
 
   public getCitationFormat(): CitationFormat {
-    const defaultFormat: CitationFormat = {
-      format: "<b>{creator.lastName}</b>{etal}, {year}, <i>{journalAbbreviation}</i>",
-      delimiter: ";  ",
-    };
+    const defaultFormat = DEFAULT_CONFIG.citationFormats.default;
     if (this.config?.selectedCitationFormat && this.config.citationFormats) {
       return this.config.citationFormats[this.config.selectedCitationFormat] ?? defaultFormat;
     }
@@ -278,7 +289,7 @@ export class ZoteroLibrary {
    * Get the citation shape name
    */
   getCitationShapeName(): string {
-    return this.config?.citationShapeName || "Citation";
+    return this.config?.citationShapeName ?? DEFAULT_CONFIG.citationShapeName;
   }
 
   /**
