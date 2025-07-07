@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
  * See LICENSE in the project root for license information.
  */
@@ -418,4 +418,152 @@ b {
 
 .zotero-dropdown-item .zotero-result-meta {
   color: #666;
+}
+
+/* Settings Panel Styles */
+.zotero-settings-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #f8f9fa;
+  z-index: 1000;
+  overflow-y: auto;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.zotero-settings-panel .ms-welcome__header {
+  flex-shrink: 0;
+}
+
+.settings-content {
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+/* Form Styles */
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  font-weight: 600;
+  color: #323130;
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #605e5c;
+  border-radius: 2px;
+  font-size: 14px;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #0078d4;
+}
+
+.form-input[type="password"] {
+  font-family: "Courier New", monospace;
+}
+
+.form-select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #605e5c;
+  border-radius: 2px;
+  font-size: 14px;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: #0078d4;
+}
+
+textarea.form-input {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.help-text {
+  font-size: 12px;
+  color: #605e5c;
+  margin-top: 4px;
+}
+
+.help-text a {
+  color: #0078d4;
+  text-decoration: none;
+}
+
+.help-text a:hover {
+  text-decoration: underline;
+}
+
+.error-message {
+  color: #d13438;
+  font-size: 12px;
+  margin-top: 4px;
+  display: none;
+}
+
+.error-message.error-visible {
+  display: block;
+}
+
+.button-group {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #edebe9;
+}
+
+/* Main Content Panel */
+.zotero-main-content {
+  display: block;
+}
+
+.zotero-main-content.hidden {
+  display: none;
+}
+
+.zotero-settings-panel.hidden {
+  display: none;
+}
+
+/* Button Styles */
+.zotero-button-primary {
+  background-color: #0078d4;
+  color: white;
+  border: none;
+}
+
+.zotero-button-primary:hover {
+  background-color: #106ebe;
+}
+
+.zotero-button-secondary {
+  background-color: #f3f2f1;
+  color: #323130;
+  border: 1px solid #8a8886;
+}
+
+.zotero-button-secondary:hover {
+  background-color: #edebe9;
 }

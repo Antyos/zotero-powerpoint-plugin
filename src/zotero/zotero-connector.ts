@@ -36,7 +36,7 @@ interface ZoteroConfig {
   citationShapeName?: string;
 }
 
-const DEFAULT_CONFIG: Omit<Required<ZoteroConfig>, "apiKey"> = {
+const DEFAULT_CONFIG: Required<Omit<ZoteroConfig, "apiKey">> = {
   userId: 0,
   userType: "user",
   citationFormats: {
@@ -104,10 +104,30 @@ export class ZoteroLibrary {
     return this.isConnected;
   }
 
+  private hasUserIdAndApiKey(
+    config: Partial<ZoteroConfig>
+  ): config is Pick<ZoteroConfig, "userId" | "apiKey"> &
+    Partial<Omit<ZoteroConfig, "userId" | "apiKey">> {
+    return !!(config.apiKey && config.userId && config.userId > 0);
+  }
+
+  async updateConfig(config: Partial<ZoteroConfig>): Promise<void> {
+    // Merge with existing config, only updating apiKey if it's provided
+    let newConfig: ZoteroConfig;
+    if (this.config !== undefined) {
+      newConfig = { ...this.config, ...config };
+    } else if (this.hasUserIdAndApiKey(config)) {
+      newConfig = { ...config };
+    } else {
+      throw new Error("ApiKey and User ID are required for initial configuration");
+    }
+    this.setConfig(newConfig);
+  }
+
   /**
    * Configure Zotero user credentials and save them persistently
    */
-  async updateConfig(config: ZoteroConfig): Promise<void> {
+  async setConfig(config: ZoteroConfig): Promise<void> {
     try {
       // Validate citation formats if provided
       if (config.citationFormats && !this.validateCitationFormats(config.citationFormats)) {
@@ -274,7 +294,7 @@ export class ZoteroLibrary {
    * Check if configuration is complete
    */
   isConfigured(): boolean {
-    return !!(this.config?.apiKey && this.config?.userId);
+    return !!(this.config?.apiKey && this.config?.userId && this.config.userId > 0);
   }
 
   public getCitationFormat(): CitationFormat {

@@ -7,7 +7,7 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Contoso Task Pane Add-in</title>
+    <title>Zotero PowerPoint Task Pane Add-in</title>
 
     <!-- Office JavaScript API -->
     <script
@@ -50,6 +50,138 @@
         </div>
       </div>
     </header>
+      <!-- Settings Panel (initially hidden) -->
+    <section id="settings-panel" class="ms-Grid zotero-settings-panel hidden">
+      <header class="ms-welcome__header ms-bgColor-neutralLighter">
+        <div class="header-content">
+          <div class="header-left">
+            <img
+              width="32"
+              height="32"
+              src="../../assets/logo-filled.png"
+              alt="Zotero"
+              title="Zotero"
+              class="header-icon"
+            />
+            <h1 class="ms-font-xl header-title">Zotero Configuration</h1>
+          </div>
+          <div class="header-right">
+            <button id="close-settings" class="ms-Button header-settings-btn" title="Close Settings">
+              <i class="ms-Icon ms-Icon--ChromeClose"></i>
+            </button>
+          </div>
+        </div>
+      </header>
+      
+      <div class="settings-content">
+        <form id="settings-form">
+            <div class="form-group">
+              <label class="form-label" for="settings-api-key">API Key</label>
+              <input
+                type="password"
+                id="settings-api-key"
+                class="form-input"
+                placeholder="Enter your Zotero API key (leave blank to keep existing)"
+              />
+              <div class="help-text">
+                Generate a new API key from your
+                <a href="https://www.zotero.org/settings/keys/new" target="_blank" rel="noopener noreferrer">Zotero Settings</a>.
+                Make sure to select the <strong>Allow Library Access</strong> permission.
+                <br /><strong>Leave blank to keep your existing API key.</strong>
+              </div>
+              <div class="error-message" id="settings-api-key-error"></div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="settings-user-id">User ID *</label>
+              <input
+                type="number"
+                id="settings-user-id"
+                class="form-input"
+                placeholder="Enter your Zotero User ID"
+                required
+              />
+              <div class="help-text">
+                Find your User ID in your
+                <a href="https://www.zotero.org/settings/security#applications" target="_blank" rel="noopener noreferrer">Zotero settings > Applications</a>.
+              </div>
+              <div class="error-message" id="settings-user-id-error"></div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="settings-user-type">User Type</label>
+              <select id="settings-user-type" class="form-select">
+                <option value="user">User</option>
+                <option value="group">Group</option>
+              </select>
+              <div class="help-text">Select "User" for personal library, "Group" for group library</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="settings-search-limit">Search Results Limit</label>
+              <input
+                type="number"
+                id="settings-search-limit"
+                class="form-input"
+                placeholder="5"
+                min="1"
+                max="50"
+                value="5"
+              />
+              <div class="help-text">Maximum number of search results to display (1-50)</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="settings-citation-formats">Citation Formats (JSON)</label>
+              <textarea
+                id="settings-citation-formats"
+                class="form-input"
+                rows="4"
+                placeholder='{"default": {"format": "<b>[{#}] {creator}</b>, {year}, <i>{journalAbbreviation}</i>", "delimiter": ";  "}}'
+              ></textarea>
+              <div class="help-text">
+                Define available citation formats as JSON object with format IDs and format objects
+                containing 'format' and optional 'delimiter' properties.
+              </div>
+              <div class="error-message" id="settings-citation-formats-error"></div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="settings-selected-format">Citation Format</label>
+              <select id="settings-selected-format" class="form-select">
+                <option value="">Select a format...</option>
+              </select>
+              <div class="help-text">Choose the citation format to use</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="settings-citation-shape">Citation Shape Name</label>
+              <input
+                type="text"
+                id="settings-citation-shape"
+                class="form-input"
+                placeholder="Citation"
+                value="Citation"
+              />
+              <div class="help-text">
+                RegEx for citation text box names in PowerPoint slides. Text box names can be changed in
+              the <b>Selection Pane</b>.
+              </div>
+            </div>
+
+            <div class="button-group">
+              <button type="button" id="settings-cancel" class="ms-Button zotero-button-secondary">
+                <span class="ms-Button-label">Cancel</span>
+              </button>
+              <button type="submit" id="settings-save" class="ms-Button zotero-button-primary">
+                <span class="ms-Button-label">Save Configuration</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+    
     <section id="sideload-msg" class="ms-welcome__main">
       <h2 class="ms-font-xl">
         Please
@@ -63,8 +195,10 @@
       </h2>
     </section>
     <main id="app-body" class="ms-welcome__main app-body-hidden">
-      <!-- Zotero Search Section -->
-      <section class="ms-Grid zotero-search-section">
+      <!-- Main Content Panel -->
+      <div id="main-content" class="zotero-main-content">
+        <!-- Zotero Search Section -->
+        <section class="ms-Grid zotero-search-section">
         <div class="ms-Grid-row">
           <div class="ms-Grid-col ms-sm12">
             <h2 class="ms-font-l">Search Zotero Library</h2>
@@ -138,7 +272,7 @@
             <p><label id="item-subject" class="ms-font-s"></label></p>
           </div>
         </div>
-      </section>
+      </div>
     </main>
   </body>
 </html>

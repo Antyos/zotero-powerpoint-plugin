@@ -51,9 +51,29 @@ function initializeZoteroUI() {
   const debugCitationsButton = document.getElementById("debug-citations");
   const clearCitationStoreButton = document.getElementById("clear-citation-store");
 
+  // Settings panel elements
+  const closeSettingsButton = document.getElementById("close-settings");
+  const settingsForm = document.getElementById("settings-form");
+  const settingsCancelButton = document.getElementById("settings-cancel");
+
   if (configureButton) {
-    configureButton.onclick = configureZotero;
+    configureButton.onclick = showSettingsPanel;
   }
+
+  if (closeSettingsButton) {
+    closeSettingsButton.onclick = hideSettingsPanel;
+  }
+
+  if (settingsForm) {
+    settingsForm.onsubmit = handleSettingsSubmit;
+  }
+
+  if (settingsCancelButton) {
+    settingsCancelButton.onclick = hideSettingsPanel;
+  }
+
+  // Set up live JSON validation for citation formats
+  setupCitationFormatsValidation();
 
   if (refreshCitationsButton) {
     refreshCitationsButton.onclick = () => updateCitationsPanel(true);
@@ -225,19 +245,192 @@ function initializeZoteroUI() {
   updateCitationsPanel(false);
 }
 
-async function configureZotero() {
+function showSettingsPanel() {
   try {
-    console.log("Opening configuration dialog...");
-    const zotero = ZoteroLibrary.getInstance();
-    const result = await zotero.configureFromDialog();
+    console.log("Showing settings panel...");
 
-    if (result) {
-      console.log("Configuration saved successfully!");
-    } else {
-      console.log("Configuration cancelled.");
+    // Load current configuration into the form
+    loadCurrentSettingsConfig();
+
+    // Show settings panel and hide main content
+    const settingsPanel = document.getElementById("settings-panel");
+    const mainContent = document.getElementById("main-content");
+
+    if (settingsPanel) {
+      settingsPanel.classList.remove("hidden");
+    }
+
+    if (mainContent) {
+      mainContent.classList.add("hidden");
     }
   } catch (error) {
-    console.error("Configuration error:", error);
+    console.error("Error showing settings panel:", error);
+  }
+}
+
+function hideSettingsPanel() {
+  try {
+    console.log("Hiding settings panel...");
+
+    // Hide settings panel and show main content
+    const settingsPanel = document.getElementById("settings-panel");
+    const mainContent = document.getElementById("main-content");
+
+    if (settingsPanel) {
+      settingsPanel.classList.add("hidden");
+    }
+
+    if (mainContent) {
+      mainContent.classList.remove("hidden");
+    }
+  } catch (error) {
+    console.error("Error hiding settings panel:", error);
+  }
+}
+
+function loadCurrentSettingsConfig() {
+  try {
+    // Use the imported default configuration
+    const config = ZoteroLibrary.getInstance().getConfig();
+
+    // Populate form fields (except API key for security)
+    if (config.userId) {
+      (document.getElementById("settings-user-id") as HTMLInputElement).value =
+        config.userId.toString();
+    }
+    if (config.userType) {
+      (document.getElementById("settings-user-type") as HTMLSelectElement).value = config.userType;
+    }
+    if (config.searchResultsLimit) {
+      (document.getElementById("settings-search-limit") as HTMLInputElement).value =
+        config.searchResultsLimit.toString();
+    }
+    if (config.citationFormats) {
+      (document.getElementById("settings-citation-formats") as HTMLTextAreaElement).value =
+        JSON.stringify(config.citationFormats, null, 2);
+      populateSettingsCitationFormatOptions(config.citationFormats);
+    }
+    if (config.selectedCitationFormat) {
+      (document.getElementById("settings-selected-format") as HTMLSelectElement).value =
+        config.selectedCitationFormat;
+    }
+    if (config.citationShapeName) {
+      (document.getElementById("settings-citation-shape") as HTMLInputElement).value =
+        config.citationShapeName;
+    }
+
+    console.log("Current config loaded into settings form");
+  } catch (error) {
+    console.error("Error loading current settings config:", error);
+  }
+}
+
+function populateSettingsCitationFormatOptions(formats: any) {
+  const select = document.getElementById("settings-selected-format") as HTMLSelectElement;
+  const currentValue = select.value;
+
+  // Clear existing options except the first one
+  select.innerHTML = '<option value="">Select a format...</option>';
+
+  // Add options from formats object
+  for (const [key] of Object.entries(formats)) {
+    const option = document.createElement("option");
+    option.value = key;
+    // Display the key as the label
+    option.textContent = key;
+    select.appendChild(option);
+  }
+
+  // Restore selection if it still exists
+  if (currentValue && formats[currentValue]) {
+    select.value = currentValue;
+  }
+}
+
+async function handleSettingsSubmit(event: Event) {
+  event.preventDefault();
+
+  try {
+    console.log("Handling settings form submission...");
+
+    // Get form values
+    const apiKeyInput = (document.getElementById("settings-api-key") as HTMLInputElement).value;
+    const userId = parseInt(
+      (document.getElementById("settings-user-id") as HTMLInputElement).value
+    );
+    const userType = (document.getElementById("settings-user-type") as HTMLSelectElement).value;
+    const searchResultsLimit =
+      parseInt((document.getElementById("settings-search-limit") as HTMLInputElement).value) || 5;
+    const selectedCitationFormat =
+      (document.getElementById("settings-selected-format") as HTMLSelectElement).value || undefined;
+    const citationShapeName =
+      (document.getElementById("settings-citation-shape") as HTMLInputElement).value || "Citation";
+
+    // Handle API key - use new one if provided, otherwise keep existing
+    let apiKey = apiKeyInput;
+    if (!apiKey) {
+      // Try to get existing API key
+      try {
+        const partitionKey = (Office as any).context?.partitionKey || "default";
+        const settingsJson = localStorage.getItem(`${partitionKey}-zotero-settings`);
+        if (settingsJson) {
+          const existingConfig = JSON.parse(settingsJson);
+          apiKey = existingConfig.apiKey;
+        }
+      } catch (error) {
+        console.error("Error getting existing API key:", error);
+      }
+    }
+
+    // Parse citation formats if provided
+    let citationFormats = undefined;
+    const citationFormatsText = (
+      document.getElementById("settings-citation-formats") as HTMLTextAreaElement
+    ).value.trim();
+
+    if (citationFormatsText) {
+      // Validate before saving
+      const errorContainer = document.getElementById(
+        "settings-citation-formats-error"
+      ) as HTMLDivElement;
+
+      const isValid = validateCitationFormats(citationFormatsText, errorContainer);
+      if (!isValid) {
+        console.error("Invalid citation formats, cannot save");
+        return;
+      }
+
+      try {
+        citationFormats = JSON.parse(citationFormatsText);
+        console.log("Parsed citation formats:", citationFormats);
+      } catch (error) {
+        console.error("Error parsing citation formats:", error);
+        return;
+      }
+    }
+
+    const configToSave = {
+      apiKey: apiKey,
+      userId: userId,
+      userType: userType as "user" | "group",
+      searchResultsLimit: searchResultsLimit,
+      citationFormats: citationFormats,
+      selectedCitationFormat: selectedCitationFormat,
+      citationShapeName: citationShapeName,
+    };
+
+    console.log("Saving configuration:", configToSave);
+
+    // Save the configuration
+    const zotero = ZoteroLibrary.getInstance();
+    await zotero.updateConfig(configToSave);
+
+    console.log("Configuration saved successfully!");
+
+    // Hide settings panel
+    hideSettingsPanel();
+  } catch (error) {
+    console.error("Error saving settings:", error);
   }
 }
 
@@ -607,5 +800,92 @@ async function showRecentCitations() {
         '<div class="zotero-dropdown-empty">Error loading recent citations.</div>';
       showSearchDropdown();
     }
+  }
+}
+
+// Live JSON validation for citation formats
+function setupCitationFormatsValidation() {
+  const formatsTextArea = document.getElementById(
+    "settings-citation-formats"
+  ) as HTMLTextAreaElement;
+  const errorContainer = document.getElementById(
+    "settings-citation-formats-error"
+  ) as HTMLDivElement;
+  const saveButton = document.getElementById("settings-save") as HTMLButtonElement;
+
+  if (!formatsTextArea || !errorContainer || !saveButton) {
+    console.warn("Citation formats validation elements not found");
+    return;
+  }
+
+  // Initial validation
+  validateCitationFormats(formatsTextArea.value, errorContainer, saveButton);
+
+  // Live validation on input with debouncing
+  let validationTimeout: ReturnType<typeof setTimeout>;
+  formatsTextArea.addEventListener("input", () => {
+    clearTimeout(validationTimeout);
+    validationTimeout = setTimeout(() => {
+      validateCitationFormats(formatsTextArea.value, errorContainer, saveButton);
+    }, 300);
+  });
+}
+
+// Validate citation formats JSON and update dropdown
+function validateCitationFormats(
+  formatsText: string,
+  errorContainer: HTMLDivElement,
+  saveButton?: HTMLButtonElement
+): boolean {
+  try {
+    // Clear previous error
+    errorContainer.textContent = "";
+    errorContainer.classList.remove("error-visible");
+
+    // If empty, that's okay - just clear the dropdown
+    if (!formatsText.trim()) {
+      populateSettingsCitationFormatOptions({});
+      if (saveButton) saveButton.disabled = false;
+      return true;
+    }
+
+    // Parse the JSON
+    const formatsJson = JSON.parse(formatsText);
+
+    // Basic structure check
+    if (typeof formatsJson !== "object" || formatsJson === null) {
+      throw new Error("Citation formats must be a JSON object");
+    }
+
+    // Check format structure
+    const formatKeys = Object.keys(formatsJson);
+    for (const key of formatKeys) {
+      const format = formatsJson[key];
+      if (typeof format !== "object" || format === null) {
+        throw new Error(`Format "${key}" must be an object`);
+      }
+      if (!format.format || typeof format.format !== "string") {
+        throw new Error(`Format "${key}" must have a "format" property with a string value`);
+      }
+      // delimiter is optional, but if present must be a string
+      if (format.delimiter && typeof format.delimiter !== "string") {
+        throw new Error(`Format "${key}" delimiter must be a string`);
+      }
+    }
+
+    // If everything is valid, update the dropdown and enable save button
+    populateSettingsCitationFormatOptions(formatsJson);
+    if (saveButton) saveButton.disabled = false;
+    return true;
+  } catch (error) {
+    // Show error message
+    const errorMessage = error instanceof Error ? error.message : "Invalid JSON format";
+    errorContainer.textContent = errorMessage;
+    errorContainer.classList.add("error-visible");
+
+    // Clear the dropdown and disable save button on error
+    populateSettingsCitationFormatOptions({});
+    if (saveButton) saveButton.disabled = true;
+    return false;
   }
 }
