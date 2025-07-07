@@ -1,4 +1,4 @@
-import { ZoteroItemData } from "zotero-api-client";
+import { ZoteroCreator, ZoteroItemData } from "zotero-api-client";
 import { CITATION_TAG_KEY, CitationStore } from "./citation-store";
 import { getJournalAbbreviation } from "./journal-abbreviations";
 import { CitationFormat, ZoteroLibrary } from "./zotero-connector";
@@ -170,20 +170,45 @@ class CitationFormatter {
     return (await getJournalAbbreviation(citation.publicationTitle)) ?? citation.publicationTitle;
   }
 
-  async format(citation: ZoteroItemData): Promise<FormattedText[]> {
+  private getDisplayName(creator: ZoteroCreator, fallback: string = "Unknown"): string {
+    return creator.lastName ?? creator.name ?? fallback;
+  }
+
+  /**
+   * Get the formatted creator string from the citation.
+   *  - 0 : `fallback`
+   *  - 1 : "lastName1"
+   *  - 2 : "lastName1 and lastName2"
+   *  - 3+: "lastName1 et al."
+   */
+  private getCreator(creators: ZoteroItemData["creators"], fallback: string = "Unknown"): string {
+    if (creators.length === 0) {
+      return fallback;
+    } else if (creators.length === 1) {
+      return (
+        this.getDisplayName(creators[0], fallback) +
+        " and " +
+        this.getDisplayName(creators[1], fallback)
+      );
+    } else {
+      return this.getDisplayName(creators[0], fallback) + " et al.";
+    }
+  }
+
+  async format(
+    citation: ZoteroItemData,
+    extras?: { index?: number; startIndex?: number }
+  ): Promise<FormattedText[]> {
     const year =
       citation.date && typeof citation.date === "string"
         ? citation.date.split("-")[0]
         : citation.date || "n.d.";
-    const creator = citation.creators[0];
-    const etal = citation.creators && citation.creators.length > 1 ? " et al." : "";
+    const creator = this.getCreator(citation.creators);
     const journalAbbreviation = (await this.getJournalAbbreviation(citation)) ?? "";
 
     // Replace placeholders with actual values
     let text = this._format
-      .replace("{creator.lastName}", creator?.lastName || "Unknown")
-      .replace("{creator.firstName}", creator?.firstName || "Unknown")
-      .replace("{creator.name}", creator?.name || "Unknown")
+      .replace("{creator}", creator || "Unknown")
       .replace("{title}", citation.title || "No Title")
       .replace("{key}", citation.key)
       .replace("{itemType}", citation.itemType || "Unknown Type")
@@ -208,9 +233,12 @@ class CitationFormatter {
       .replace("{seriesNumber}", citation.seriesNumber || "No Series Number")
       .replace("{institution}", citation.institution || "No Institution")
       .replace("{department}", citation.department || "No Department")
-      .replace("{etal}", etal)
       .replace("{year}", year)
-      .replace("{journalAbbreviation}", journalAbbreviation);
+      .replace("{journalAbbreviation}", journalAbbreviation)
+      .replace(
+        "{#}",
+        extras?.index !== undefined ? (extras.index + (extras.startIndex ?? 0) + 1).toString() : "#"
+      );
 
     // Parse formatting tags and create formatted text segments
     return CitationFormatter.parseFormattedText(text);
@@ -314,7 +342,7 @@ export async function showCitationsOnSlide(
     if (!citation) {
       continue;
     }
-    const formattedSegments = await formatter.format(citation);
+    const formattedSegments = await formatter.format(citation, { index: index });
 
     for (const segment of formattedSegments) {
       const startIndex = completeText.length;
