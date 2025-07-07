@@ -1,7 +1,7 @@
 import { ZoteroItemData } from "zotero-api-client";
 import { CITATION_TAG_KEY, CitationStore } from "./citation-store";
 import { getJournalAbbreviation } from "./journal-abbreviations";
-import { ZoteroLibrary } from "./zotero-connector";
+import { CitationFormat, ZoteroLibrary } from "./zotero-connector";
 
 export async function getCurrentSlide(
   context?: PowerPoint.RequestContext
@@ -149,12 +149,12 @@ async function getCitationTextBox(
 
 class CitationFormatter {
   private _format: string;
-  private _delimeter: string;
+  private _delimiter: string;
 
-  constructor(format: string, delimeter: string) {
+  constructor({ format, delimiter }: CitationFormat) {
     // Initialization if needed
     this._format = format;
-    this._delimeter = delimeter;
+    this._delimiter = delimiter ?? ";  ";
   }
 
   private async getJournalAbbreviation(citation: ZoteroItemData): Promise<string | null> {
@@ -267,8 +267,8 @@ class CitationFormatter {
     return segments;
   }
 
-  public get delimeter(): string {
-    return this._delimeter;
+  public get delimiter(): string {
+    return this._delimiter;
   }
 }
 
@@ -278,79 +278,94 @@ interface FormattedText {
   italic: boolean;
 }
 
+export async function _showCitationsOnSlide(
+  slide: PowerPoint.Slide,
+  formatter?: CitationFormatter,
+  allCitations?: Map<string, ZoteroItemData>,
+  citationShapeName?: string
+): Promise<boolean> {
+  const citationKeys = await getCitationKeysOnSlide(slide);
+  const citations = allCitations
+    ? citationKeys.map((key) => allCitations.get(key))
+    : await CitationStore.getInstance().getItem(citationKeys);
+  citationShapeName = citationShapeName ?? ZoteroLibrary.getInstance().getCitationShapeName();
+  const citationBox = await getCitationTextBox(slide, citationShapeName, citations.length > 0);
+
+  if (!citationBox) {
+    return false;
+  }
+  if (citationBox && citations.length === 0) {
+    // The API seems to be missing a hide() method, so we'll just delete it and recreate it later
+    // if needed.
+    citationBox.delete();
+    console.log("No citations on current slide.");
+    return false;
+  }
+  if (!formatter) {
+    const config = ZoteroLibrary.getInstance().getConfig();
+    const citationFormat = config.citationFormats?.[config.selectedCitationFormat || ""] || {
+      format: "<b>{creator.lastName}</b>{etal}, {year}, <i>{journalAbbreviation}</i>",
+      delimiter: ";  ",
+    };
+    formatter = new CitationFormatter(citationFormat);
+  }
+
+  // Build the complete text first, then apply formatting
+  let completeText = "";
+  const allSegments: Array<{ segment: FormattedText; startIndex: number; endIndex: number }> = [];
+
+  for (const [index, citation] of citations.entries()) {
+    if (!citation) {
+      continue;
+    }
+    const formattedSegments = await formatter.format(citation);
+
+    for (const segment of formattedSegments) {
+      const startIndex = completeText.length;
+      completeText += segment.text;
+      const endIndex = completeText.length;
+
+      allSegments.push({
+        segment,
+        startIndex,
+        endIndex,
+      });
+    }
+
+    if (index < citations.length - 1) {
+      allSegments.push({
+        segment: { text: formatter.delimiter, bold: false, italic: false },
+        startIndex: completeText.length,
+        endIndex: completeText.length + formatter.delimiter.length,
+      });
+      completeText += formatter.delimiter;
+    }
+  }
+
+  // Set the complete text
+  citationBox.textFrame.textRange.text = completeText;
+
+  // Apply formatting to each segment
+  for (const { segment, startIndex, endIndex } of allSegments) {
+    const range = citationBox.textFrame.textRange.getSubstring(startIndex, endIndex - startIndex);
+    range.font.bold = segment.bold;
+    range.font.italic = segment.italic;
+  }
+  return true;
+}
+
 export async function showCitationsOnSlide(
   slide?: PowerPoint.Slide,
   format: string = "<b>{creator.lastName}</b>{etal}, {year}, <i>{journalAbbreviation}</i>",
-  delimeter: string = ";  "
+  delimiter: string = ";  "
 ): Promise<void> {
-  const citationFormatter = new CitationFormatter(format, delimeter);
+  const citationFormatter = new CitationFormatter({ format, delimiter });
   return await PowerPoint.run(async (context) => {
     slide = slide ?? (await getCurrentSlide(context));
-    const citationKeys = await getCitationKeysOnSlide(slide);
-    const citations = await CitationStore.getInstance().getItem(citationKeys);
-
-    // Get the citation shape name from configuration
-    const zoteroLibrary = ZoteroLibrary.getInstance();
-    const citationShapeName = zoteroLibrary.getCitationShapeName();
-    // Don't create a new citation box if there are no citations to show
-    const citationBox = await getCitationTextBox(slide, citationShapeName, citations.length > 0);
-
-    if (!citationBox) {
-      return;
-    }
-    if (citationBox && citations.length === 0) {
-      // The API seems to be missing a hide() method, so we'll just delete it and recreate it later
-      // if needed.
-      citationBox.delete();
-      await context.sync();
-      console.log("No citations on current slide.");
-      return;
-    }
-
-    // Build the complete text first, then apply formatting
-    let completeText = "";
-    const allSegments: Array<{ segment: FormattedText; startIndex: number; endIndex: number }> = [];
-
-    for (const [index, citation] of citations.entries()) {
-      if (!citation) {
-        continue;
-      }
-      const formattedSegments = await citationFormatter.format(citation);
-
-      for (const segment of formattedSegments) {
-        const startIndex = completeText.length;
-        completeText += segment.text;
-        const endIndex = completeText.length;
-
-        allSegments.push({
-          segment,
-          startIndex,
-          endIndex,
-        });
-      }
-
-      if (index < citations.length - 1) {
-        allSegments.push({
-          segment: { text: citationFormatter.delimeter, bold: false, italic: false },
-          startIndex: completeText.length,
-          endIndex: completeText.length + citationFormatter.delimeter.length,
-        });
-        completeText += citationFormatter.delimeter;
-      }
-    }
-
-    // Set the complete text
-    citationBox.textFrame.textRange.text = completeText;
-
-    // Apply formatting to each segment
-    for (const { segment, startIndex, endIndex } of allSegments) {
-      const range = citationBox.textFrame.textRange.getSubstring(startIndex, endIndex - startIndex);
-      range.font.bold = segment.bold;
-      range.font.italic = segment.italic;
-    }
-
+    // allCitations and citationShapeName will be auto-fetched inside. They are only useful to pass
+    // if we are doing a bulk operation.
+    await _showCitationsOnSlide(slide, citationFormatter);
     await context.sync();
-    console.log(`Citations on current slide: ${citationKeys.join(", ")}`);
   });
 }
 
@@ -361,7 +376,7 @@ export async function showCitationsOnSlide(
 /**
  * Add a citation key to the current slide
  */
-export async function addCitationToSlide(
+export async function addCitationKeyToSlide(
   citationKey: string,
   slide?: PowerPoint.Slide
 ): Promise<void> {
@@ -483,7 +498,7 @@ export async function insertCitationOnSlide(citation: ZoteroItemData): Promise<v
   await store.add(citation);
 
   // Add citation key to the current slide
-  await addCitationToSlide(citation.key);
+  await addCitationKeyToSlide(citation.key);
 }
 
 /**
