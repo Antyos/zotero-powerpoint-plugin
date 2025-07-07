@@ -2,8 +2,7 @@
 <OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
-  xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
-  xsi:type="TaskPaneApp">
+  xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="TaskPaneApp">
   <Id>89f9b0bf-37dd-4823-b1c3-a4b8125db554</Id>
   <Version>0.1.0.0</Version>
   <ProviderName>Contoso</ProviderName>
@@ -15,7 +14,6 @@
   <SupportUrl DefaultValue="https://www.contoso.com/help" />
   <AppDomains>
     <AppDomain>https://www.contoso.com</AppDomain>
-    <AppDomain>https://127.0.0.1:23119</AppDomain>
   </AppDomains>
   <Hosts>
     <Host Name="Presentation" />
@@ -60,36 +58,6 @@
                     <SourceLocation resid="Taskpane.Url" />
                   </Action>
                 </Control>
-                <Control xsi:type="Button" id="ZoteroInsertCitation">
-                  <Label resid="ZoteroInsertCitation.Label" />
-                  <Supertip>
-                    <Title resid="ZoteroInsertCitation.Label" />
-                    <Description resid="ZoteroInsertCitation.Tooltip" />
-                  </Supertip>
-                  <Icon>
-                    <bt:Image size="16" resid="Icon.16x16" />
-                    <bt:Image size="32" resid="Icon.32x32" />
-                    <bt:Image size="80" resid="Icon.80x80" />
-                  </Icon>
-                  <Action xsi:type="ExecuteFunction">
-                    <FunctionName>insertZoteroCitation</FunctionName>
-                  </Action>
-                </Control>
-                <Control xsi:type="Button" id="ZoteroTestButton">
-                  <Label resid="ZoteroTestButton.Label" />
-                  <Supertip>
-                    <Title resid="ZoteroTestButton.Label" />
-                    <Description resid="ZoteroTestButton.Tooltip" />
-                  </Supertip>
-                  <Icon>
-                    <bt:Image size="16" resid="Icon.16x16" />
-                    <bt:Image size="32" resid="Icon.32x32" />
-                    <bt:Image size="80" resid="Icon.80x80" />
-                  </Icon>
-                  <Action xsi:type="ExecuteFunction">
-                    <FunctionName>testZoteroConnection</FunctionName>
-                  </Action>
-                </Control>
               </Group>
             </OfficeTab>
           </ExtensionPoint>
@@ -110,22 +78,13 @@
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="GetStarted.Title" DefaultValue="Get started with your sample add-in!" />
-        <bt:String id="CommandsGroup.Label" DefaultValue="Zotero Integration" />
+        <bt:String id="CommandsGroup.Label" DefaultValue="Commands Group" />
         <bt:String id="TaskpaneButton.Label" DefaultValue="Show Task Pane" />
-        <bt:String id="ZoteroInsertCitation.Label" DefaultValue="Insert Citation" />
-        <bt:String id="ZoteroTestButton.Label" DefaultValue="Test Connection" />
-        <bt:String id="ZoteroConfig.Label" DefaultValue="Configure Zotero" />
       </bt:ShortStrings>
       <bt:LongStrings>
         <bt:String id="GetStarted.Description"
           DefaultValue="Your sample add-in loaded successfully. Go to the HOME tab and click the 'Show Task Pane' button to get started." />
         <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Click to Show a Taskpane" />
-        <bt:String id="ZoteroInsertCitation.Tooltip"
-          DefaultValue="Insert a citation from Zotero into the current slide" />
-        <bt:String id="ZoteroTestButton.Tooltip"
-          DefaultValue="Test connection to Zotero and show diagnostic information" />
-        <bt:String id="ZoteroConfig.Tooltip"
-          DefaultValue="Open the Zotero configuration dialog to set up your API key and user ID" />
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>
