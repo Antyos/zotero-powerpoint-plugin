@@ -74,23 +74,27 @@
       .form-input:focus {
         outline: none;
         border-color: #0078d4;
-        box-shadow: 0 0 0 1px #0078d4;
       }
 
-      .form-select {
+      .form-input[type="password"] {
+        font-family: "Courier New", monospace;
+      }
+
+      .form-select,
+      textarea.form-input {
         width: 100%;
         padding: 8px 12px;
         border: 1px solid #605e5c;
         border-radius: 2px;
         font-size: 14px;
         box-sizing: border-box;
-        background-color: white;
+        transition: border-color 0.2s;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
       }
 
-      .form-select:focus {
-        outline: none;
-        border-color: #0078d4;
-        box-shadow: 0 0 0 1px #0078d4;
+      textarea.form-input {
+        resize: vertical;
+        min-height: 80px;
       }
 
       .button-group {
@@ -162,7 +166,7 @@
             type="password"
             id="apiKey"
             class="form-input"
-            placeholder="Enter your Zotero API key"
+            placeholder="Enter your Zotero API key (leave blank to keep existing)"
           />
           <div class="help-text">
             Generate a new API key from your
@@ -171,8 +175,8 @@
               target="_blank"
               rel="noopener noreferrer"
               >Zotero Settings</a
-            >. Make sure to select the <strong>Allow Library Access</strong> permission. Paste the
-            key here.
+            >. Make sure to select the <strong>Allow Library Access</strong> permission.
+            <br /><strong>Leave blank to keep your existing API key.</strong>
             <p>Note: For security, the API key will not be displayed again after saving.</p>
           </div>
           <div class="error-message" id="apiKeyError"></div>
@@ -206,6 +210,58 @@
             <option value="group">Group</option>
           </select>
           <div class="help-text">Select "User" for personal library, "Group" for group library</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="searchResultsLimit">Search Results Limit</label>
+          <input
+            type="number"
+            id="searchResultsLimit"
+            class="form-input"
+            placeholder="5"
+            min="1"
+            max="50"
+            value="5"
+          />
+          <div class="help-text">Maximum number of search results to display (1-50)</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="citationFormats">Citation Formats (JSON)</label>
+          <textarea
+            id="citationFormats"
+            class="form-input"
+            rows="4"
+            placeholder='{"apa": {"format": "APA Style", "delimiter": "; "}, "mla": {"format": "MLA Style"}, "chicago": {"format": "Chicago Style", "delimiter": ", "}}'
+          ></textarea>
+          <div class="help-text">
+            Define available citation formats as JSON object with format IDs and format objects
+            containing 'format' and optional 'delimiter' properties.
+          </div>
+          <div class="error-message" id="citationFormatsError"></div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="selectedCitationFormat">Citation Format</label>
+          <select id="selectedCitationFormat" class="form-select">
+            <option value="">Select a format...</option>
+          </select>
+          <div class="help-text">Choose the citation format to use</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="citationShapeName">Citation Shape Name</label>
+          <input
+            type="text"
+            id="citationShapeName"
+            class="form-input"
+            placeholder="Citation"
+            value="Citation"
+          />
+          <div class="help-text">
+            RegEx for citation text box names in PowerPoint slides. Text box names can be changed in
+            the **Selection Pane**.
+          </div>
         </div>
 
         <div class="button-group">
@@ -243,6 +299,24 @@
             if (config.userType) {
               document.getElementById("userType").value = config.userType;
             }
+            if (config.searchResultsLimit) {
+              document.getElementById("searchResultsLimit").value = config.searchResultsLimit;
+            }
+            if (config.citationFormats) {
+              document.getElementById("citationFormats").value = JSON.stringify(
+                config.citationFormats,
+                null,
+                2
+              );
+              populateCitationFormatOptions(config.citationFormats);
+            }
+            if (config.selectedCitationFormat) {
+              document.getElementById("selectedCitationFormat").value =
+                config.selectedCitationFormat;
+            }
+            if (config.citationShapeName) {
+              document.getElementById("citationShapeName").value = config.citationShapeName;
+            }
 
             console.log("Current config loaded into form");
           }
@@ -264,13 +338,37 @@
         // Input validation
         document.getElementById("apiKey").addEventListener("input", validateApiKey);
         document.getElementById("userId").addEventListener("input", validateUserId);
+        document
+          .getElementById("searchResultsLimit")
+          .addEventListener("input", validateSearchResultsLimit);
+        document
+          .getElementById("citationFormats")
+          .addEventListener("input", validateCitationFormats);
       }
 
       function validateApiKey() {
         const apiKey = document.getElementById("apiKey").value;
         const errorElement = document.getElementById("apiKeyError");
 
+        // If no API key is entered, check if we have an existing one
         if (!apiKey) {
+          // Check if there's an existing API key in localStorage
+          try {
+            const partitionKey = Office.context.partitionKey || "default";
+            const settingsJson = localStorage.getItem(`${partitionKey}-zotero-settings`);
+            if (settingsJson) {
+              const existingConfig = JSON.parse(settingsJson);
+              if (existingConfig.apiKey) {
+                // We have an existing API key, so this field is optional
+                hideError(errorElement);
+                return true;
+              }
+            }
+          } catch (error) {
+            console.error("Error checking existing config:", error);
+          }
+
+          // No existing API key found, so it's required
           showError(errorElement, "API Key is required");
           return false;
         }
@@ -307,6 +405,97 @@
         return true;
       }
 
+      function validateSearchResultsLimit() {
+        const limit = document.getElementById("searchResultsLimit").value;
+
+        if (!limit) {
+          return true; // Optional field
+        }
+
+        const numLimit = parseInt(limit);
+        if (isNaN(numLimit) || numLimit < 1 || numLimit > 50) {
+          return false;
+        }
+
+        return true;
+      }
+
+      function validateCitationFormats() {
+        const formatsText = document.getElementById("citationFormats").value;
+        const errorElement = document.getElementById("citationFormatsError");
+
+        if (!formatsText.trim()) {
+          hideError(errorElement);
+          return true; // Optional field
+        }
+
+        try {
+          const formats = JSON.parse(formatsText);
+
+          if (typeof formats !== "object" || Array.isArray(formats) || formats === null) {
+            showError(errorElement, "Citation formats must be a JSON object");
+            return false;
+          }
+
+          // Validate that all values are proper CitationFormat objects
+          for (const [key, value] of Object.entries(formats)) {
+            if (typeof key !== "string") {
+              showError(errorElement, "All format keys must be strings");
+              return false;
+            }
+
+            if (typeof value !== "object" || value === null || Array.isArray(value)) {
+              showError(
+                errorElement,
+                "All format values must be objects with 'format' and optional 'delimiter' properties"
+              );
+              return false;
+            }
+
+            if (typeof value.format !== "string") {
+              showError(errorElement, "Each format must have a 'format' property that is a string");
+              return false;
+            }
+
+            if (value.delimiter !== undefined && typeof value.delimiter !== "string") {
+              showError(errorElement, "The 'delimiter' property must be a string if provided");
+              return false;
+            }
+          }
+
+          // Update the citation format dropdown
+          populateCitationFormatOptions(formats);
+          hideError(errorElement);
+          return true;
+        } catch (error) {
+          console.error("JSON parsing error:", error);
+          showError(errorElement, "Invalid JSON format: " + error.message);
+          return false;
+        }
+      }
+
+      function populateCitationFormatOptions(formats) {
+        const select = document.getElementById("selectedCitationFormat");
+        const currentValue = select.value;
+
+        // Clear existing options except the first one
+        select.innerHTML = '<option value="">Select a format...</option>';
+
+        // Add options from formats object
+        for (const [key, formatObj] of Object.entries(formats)) {
+          const option = document.createElement("option");
+          option.value = key;
+          // Display the key as the label
+          option.textContent = key;
+          select.appendChild(option);
+        }
+
+        // Restore selection if it still exists
+        if (currentValue && formats[currentValue]) {
+          select.value = currentValue;
+        }
+      }
+
       function showError(element, message) {
         element.textContent = message;
         element.style.display = "block";
@@ -322,26 +511,81 @@
         // Validate all fields
         const isApiKeyValid = validateApiKey();
         const isUserIdValid = validateUserId();
+        const isSearchLimitValid = validateSearchResultsLimit();
+        const isCitationFormatsValid = validateCitationFormats();
 
-        if (!isApiKeyValid || !isUserIdValid) {
+        if (!isApiKeyValid || !isUserIdValid || !isSearchLimitValid || !isCitationFormatsValid) {
+          // Log which fields failed
+          console.error(
+            `Validation failed for ${!isApiKeyValid ? "API Key, " : ""}` +
+              `${!isUserIdValid ? "User ID, " : ""}${!isSearchLimitValid ? "Search Limit, " : ""}` +
+              `${!isCitationFormatsValid ? "Citation Formats" : ""}`
+          );
           return;
         }
 
         // Get form values
-        const apiKey = document.getElementById("apiKey").value;
+        const apiKeyInput = document.getElementById("apiKey").value;
         const userId = parseInt(document.getElementById("userId").value);
         const userType = document.getElementById("userType").value;
+        const searchResultsLimit =
+          parseInt(document.getElementById("searchResultsLimit").value) || 5;
+        const selectedCitationFormat =
+          document.getElementById("selectedCitationFormat").value || undefined;
+        const citationShapeName = document.getElementById("citationShapeName").value || "Citation";
+
+        // Handle API key - use new one if provided, otherwise keep existing
+        let apiKey = apiKeyInput;
+        if (!apiKey) {
+          // Try to get existing API key
+          try {
+            const partitionKey = Office.context.partitionKey || "default";
+            const settingsJson = localStorage.getItem(`${partitionKey}-zotero-settings`);
+            if (settingsJson) {
+              const existingConfig = JSON.parse(settingsJson);
+              apiKey = existingConfig.apiKey;
+            }
+          } catch (error) {
+            console.error("Error getting existing API key:", error);
+          }
+        }
+
+        // Parse citation formats if provided
+        let citationFormats = undefined;
+        const citationFormatsText = document.getElementById("citationFormats").value.trim();
+        if (citationFormatsText) {
+          try {
+            citationFormats = JSON.parse(citationFormatsText);
+            console.log("Parsed citation formats:", citationFormats);
+          } catch (error) {
+            // This should not happen as we validated it above
+            console.error("Error parsing citation formats:", error);
+            showError(
+              document.getElementById("citationFormatsError"),
+              "Error parsing citation formats: " + error.message
+            );
+            return;
+          }
+        }
+
+        const configToSend = {
+          apiKey: apiKey,
+          userId: userId,
+          userType: userType,
+          searchResultsLimit: searchResultsLimit,
+          citationFormats: citationFormats,
+          selectedCitationFormat: selectedCitationFormat,
+          citationShapeName: citationShapeName,
+        };
+
+        console.log("Sending configuration:", configToSend);
 
         try {
           // Send configuration to parent window via Office.js dialog messaging
           Office.context.ui.messageParent(
             JSON.stringify({
               type: "config-saved",
-              config: {
-                apiKey: apiKey,
-                userId: userId,
-                userType: userType,
-              },
+              config: configToSend,
             })
           );
 

@@ -1,6 +1,7 @@
 import { ZoteroItemData } from "zotero-api-client";
 import { CITATION_TAG_KEY, CitationStore } from "./citation-store";
 import { getJournalAbbreviation } from "./journal-abbreviations";
+import { ZoteroLibrary } from "./zotero-connector";
 
 export async function getCurrentSlide(
   context?: PowerPoint.RequestContext
@@ -51,7 +52,10 @@ async function getCitationTextBox(
     shape.load("name");
   }
   await slide.context.sync();
-  let citationBox = shapes.items.find((shape) => shape.name === citationBoxName);
+
+  // Create regex pattern for matching citation box names
+  const namePattern = new RegExp(`^${citationBoxName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`, "i");
+  let citationBox = shapes.items.find((shape) => namePattern.test(shape.name || ""));
   if (citationBox) {
     return citationBox;
   }
@@ -63,7 +67,7 @@ async function getCitationTextBox(
     shape.load("name");
   }
   await slide.context.sync();
-  const layoutShape = slideLayout.shapes.items.find((shape) => shape.name === citationBoxName);
+  const layoutShape = slideLayout.shapes.items.find((shape) => namePattern.test(shape.name || ""));
   if (layoutShape) {
     // Reveal the shape on the slide by copying it
     const copiedShape = slide.shapes.addTextBox("", {
@@ -131,6 +135,12 @@ class CitationFormatter {
   }
 
   private async getJournalAbbreviation(citation: ZoteroItemData): Promise<string | null> {
+    if (
+      citation.journalAbbreviation &&
+      citation.journalAbbreviation !== citation.publicationTitle
+    ) {
+      return citation.journalAbbreviation;
+    }
     if (!citation.publicationTitle) {
       return null;
     }
@@ -255,7 +265,11 @@ export async function showCitationsOnSlide(
     slide = slide ?? (await getCurrentSlide(context));
     const citationKeys = await getCitationKeysOnSlide(slide);
     const citations = await CitationStore.getInstance().getItem(citationKeys);
-    const citationBox = await getCitationTextBox(slide);
+
+    // Get the citation shape name from configuration
+    const zoteroLibrary = ZoteroLibrary.getInstance();
+    const citationShapeName = zoteroLibrary.getCitationShapeName();
+    const citationBox = await getCitationTextBox(slide, citationShapeName);
 
     if (citationBox && citations.length === 0) {
       // The API seems to be missing a hide() method, so we'll just delete it and recreate it later

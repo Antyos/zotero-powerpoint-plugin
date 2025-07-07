@@ -18,6 +18,11 @@ export interface ZoteroField {
   shapeId: string;
 }
 
+export interface CitationFormat {
+  format: string;
+  delimiter?: string;
+}
+
 /**
  * User configuration for Zotero integration
  */
@@ -25,6 +30,10 @@ interface ZoteroConfig {
   apiKey: string;
   userId: number;
   userType?: "user" | "group";
+  citationFormats?: Record<string, CitationFormat>;
+  selectedCitationFormat?: string;
+  searchResultsLimit?: number;
+  citationShapeName?: string;
 }
 
 /**
@@ -86,6 +95,13 @@ export class ZoteroLibrary {
    */
   async updateConfig(config: ZoteroConfig): Promise<void> {
     try {
+      // Validate citation formats if provided
+      if (config.citationFormats && !this.validateCitationFormats(config.citationFormats)) {
+        throw new Error(
+          "Invalid citation formats structure. Each format must have a 'format' property and optional 'delimiter' property."
+        );
+      }
+
       this.config = { ...config };
 
       await this.saveConfig();
@@ -106,10 +122,18 @@ export class ZoteroLibrary {
   private async saveConfig(): Promise<void> {
     try {
       const partitionKey = Office.context.partitionKey || "default";
-      localStorage.setItem(`${partitionKey}-zotero-settings`, JSON.stringify(this.config));
-      console.log("Zotero settings saved successfully");
+      const configJson = JSON.stringify(this.config);
+      console.log("Saving configuration:", configJson);
+      localStorage.setItem(`${partitionKey}-zotero-settings`, configJson);
+      console.log("Zotero settings saved successfully to localStorage");
     } catch (error) {
       console.error("Error saving Zotero settings:", error);
+      // Check if it's a localStorage quota issue
+      if (error instanceof Error && error.name === "QuotaExceededError") {
+        throw new Error(
+          "Configuration too large for storage. Please reduce the size of your citation formats."
+        );
+      }
       throw new Error(`Failed to save settings: ${error}`);
     }
   }
@@ -142,6 +166,36 @@ export class ZoteroLibrary {
     return typeof apiKey === "string" && apiKey.length > 0 && /^[A-Za-z0-9]+$/.test(apiKey);
   }
 
+  /**
+   * Validate citation format structure
+   */
+  private validateCitationFormat(format: any): format is CitationFormat {
+    return (
+      typeof format === "object" &&
+      format !== null &&
+      !Array.isArray(format) &&
+      typeof format.format === "string" &&
+      (format.delimiter === undefined || typeof format.delimiter === "string")
+    );
+  }
+
+  /**
+   * Validate citation formats object
+   */
+  private validateCitationFormats(formats: any): formats is Record<string, CitationFormat> {
+    if (typeof formats !== "object" || formats === null || Array.isArray(formats)) {
+      return false;
+    }
+
+    for (const [key, value] of Object.entries(formats)) {
+      if (typeof key !== "string" || !this.validateCitationFormat(value)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   public async getItems(opts?: RequestOptions): Promise<ZoteroField[]> {
     try {
       const response = await ZoteroLibrary.getClient().items().get(opts);
@@ -167,13 +221,14 @@ export class ZoteroLibrary {
 
   public async quickSearch(
     query: string,
-    maxResults: number = 5,
+    maxResults?: number,
     opts?: RequestOptions
   ): Promise<ZoteroItemData[]> {
     try {
+      const limit = maxResults || this.config?.searchResultsLimit || 5;
       const response = await ZoteroLibrary.getClient()
         .items()
-        .get({ ...opts, q: query, itemType: "-attachment", limit: maxResults });
+        .get({ ...opts, q: query, itemType: "-attachment", limit: limit });
       const itemData = this.isSingleResponse(response) ? [response.getData()] : response.getData();
       console.log("Quick search results:", itemData);
       if (!itemData || itemData.length === 0) {
@@ -193,6 +248,10 @@ export class ZoteroLibrary {
     return {
       userId: this.config?.userId || 0,
       userType: this.config?.userType || "user",
+      citationFormats: this.config?.citationFormats || {},
+      selectedCitationFormat: this.config?.selectedCitationFormat || undefined,
+      searchResultsLimit: this.config?.searchResultsLimit || 5,
+      citationShapeName: this.config?.citationShapeName || "Citation",
       hasApiKey: !!this.config?.apiKey,
     };
   }
@@ -202,6 +261,47 @@ export class ZoteroLibrary {
    */
   isConfigured(): boolean {
     return !!(this.config?.apiKey && this.config?.userId);
+  }
+
+  /**
+   * Get available citation formats
+   */
+  getCitationFormats(): Record<string, CitationFormat> {
+    return this.config?.citationFormats || {};
+  }
+
+  /**
+   * Get the selected citation format
+   */
+  getSelectedCitationFormat(): string | undefined {
+    return this.config?.selectedCitationFormat;
+  }
+
+  /**
+   * Set the selected citation format
+   */
+  setSelectedCitationFormat(format: string): void {
+    if (this.config) {
+      this.config.selectedCitationFormat = format;
+      this.saveConfig();
+    }
+  }
+
+  /**
+   * Get the citation shape name
+   */
+  getCitationShapeName(): string {
+    return this.config?.citationShapeName || "Citation";
+  }
+
+  /**
+   * Set the citation shape name
+   */
+  setCitationShapeName(name: string): void {
+    if (this.config) {
+      this.config.citationShapeName = name;
+      this.saveConfig();
+    }
   }
 
   /**
