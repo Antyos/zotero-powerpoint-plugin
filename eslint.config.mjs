@@ -32,6 +32,9 @@ export default defineConfig([
     },
     rules: {
       "no-console": "off",
+      // Disable base no-redeclare rule in favor of TypeScript version
+      "no-redeclare": "off",
+      "@typescript-eslint/no-redeclare": "error",
       // Not adding a rule for regular "no-unused-vars" seems to get the job done.
       // Override TypeScript ESLint no-unused-vars rule
       "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
