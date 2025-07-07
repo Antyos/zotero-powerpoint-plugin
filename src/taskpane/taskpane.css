@@ -109,7 +109,7 @@ ul {
   align-items: stretch;
   -webkit-flex: 1 0 0;
   flex: 1 0 0;
-  padding: 10px;
+  padding: 10px 10px 10px 10px;
   background-color: #f8f9fa;
 }
 
@@ -153,8 +153,13 @@ b {
 
 /* Zotero Integration Styles */
 .zotero-search-section {
-  margin-top: 10px;
+  margin-top: 4px;
   width: 100%;
+}
+
+.zotero-search-section h2 {
+  margin-top: 0;
+  margin-bottom: 8px;
 }
 
 .zotero-section {
