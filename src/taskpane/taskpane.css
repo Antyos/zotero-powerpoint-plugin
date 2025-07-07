@@ -415,3 +415,7 @@ b {
   font-style: italic;
   text-align: center;
 }
+
+.zotero-dropdown-item .zotero-result-meta {
+  color: #666;
+}

@@ -15,11 +15,18 @@ const CITATION_XML_NAMESPACE = "http://zotero.org/citations";
 export const CITATION_TAG_KEY = "ZOTERO_CITATIONS";
 
 /**
+ * Extended citation data with lastAdded timestamp
+ */
+interface StoredCitation extends ZoteroItemData {
+  _lastAdded: number; // Unix timestamp when citation was added
+}
+
+/**
  * Schema interface for the citation XML structure stored in customXmlParts
  */
 interface CitationStoreXml {
   citations: {
-    citation: ZoteroItemData[];
+    citation: StoredCitation[];
   };
   version: 1;
   "@_xmlns": typeof CITATION_XML_NAMESPACE;
@@ -167,13 +174,17 @@ export class CitationStore {
     } else if (!Array.isArray(storeXml.citations.citation)) {
       storeXml.citations.citation = [storeXml.citations.citation];
     }
-    // Ensure creators is always an array
+    // Ensure creators is always an array and add lastAdded for backward compatibility
     for (const citation of storeXml.citations.citation) {
       if (citation.key && typeof citation.key !== "string") {
         citation.key = citation.key.toString();
       }
       if (citation.creators && !Array.isArray(citation.creators)) {
         citation.creators = [citation.creators];
+      }
+      // Add lastAdded for backward compatibility with existing citations
+      if (typeof citation.lastAdded !== "number") {
+        citation.lastAdded = 0; // Use 0 for legacy citations (will appear as oldest)
       }
     }
     return storeXml as CitationStoreXml;
@@ -212,8 +223,12 @@ export class CitationStore {
           (existingCitation) => existingCitation.key !== citation.key
         );
 
-        // Add the new citation
-        storeXml.citations.citation.push(citation);
+        // Add the new citation with lastAdded timestamp
+        const storedCitation: StoredCitation = {
+          ...citation,
+          _lastAdded: Date.now(),
+        };
+        storeXml.citations.citation.push(storedCitation);
 
         // Save the updated store structure
         await this.saveCitationStoreXml(context, storeXml, xmlPart);
@@ -347,6 +362,29 @@ export class CitationStore {
       );
       await this.saveCitationStoreXml(context, storeXml, xmlPart);
       return originalCount - storeXml.citations.citation.length;
+    });
+  }
+
+  /**
+   * Get the most recently added citations, limited by the specified count
+   */
+  public async getRecent(limit: number): Promise<ZoteroItemData[]> {
+    return await PowerPoint.run(async (context) => {
+      try {
+        const storeXml = await this.getCitationStoreXml(context);
+
+        // Sort citations by lastAdded timestamp (most recent first) and limit the results
+        const sortedCitations = storeXml.citations.citation
+          .sort((a, b) => (b._lastAdded || 0) - (a._lastAdded || 0))
+          .slice(0, limit);
+
+        // Return as ZoteroItemData (without the lastAdded property)
+        return sortedCitations.map(
+          ({ _lastAdded: _lastAdded, ...citation }) => citation as ZoteroItemData
+        );
+      } catch (error) {
+        throw new Error(`Failed to get last citations: ${error}`);
+      }
     });
   }
 }

@@ -129,11 +129,19 @@ function initializeZoteroUI() {
         if (query.length > 0) {
           searchZoteroLibrary();
         } else {
-          // Clear results when input is empty
-          hideSearchDropdown();
+          // Show recent citations when input is empty
+          showRecentCitations();
         }
         selectedIndex = -1; // Reset selection on new search
       }, SEARCH_DEBOUNCE_MS);
+    });
+
+    // Show recent citations when input is focused but empty
+    searchInput.addEventListener("focus", () => {
+      const query = (searchInput as HTMLInputElement).value.trim();
+      if (query.length === 0) {
+        showRecentCitations();
+      }
     });
 
     // Handle keyboard navigation
@@ -540,5 +548,59 @@ async function updateCitationOrder(reorderedCitations: ZoteroItemData[]) {
     console.error("Failed to update citation order:", error);
     // Optionally show user feedback about the error
     throw error;
+  }
+}
+
+async function showRecentCitations() {
+  try {
+    const citationStore = CitationStore.getInstance();
+
+    // Use the new getLast method to get the 5 most recently added citations
+    const recentCitations = await citationStore.getRecent(5);
+
+    const resultsContainer = document.getElementById("search-results");
+    if (!resultsContainer) return;
+
+    // Store results for keyboard navigation
+    (window as any).setSearchResults(recentCitations);
+
+    if (recentCitations.length === 0) {
+      resultsContainer.innerHTML = '<div class="zotero-dropdown-empty">No recent citations.</div>';
+      showSearchDropdown();
+      return;
+    }
+
+    const resultsList = recentCitations
+      .map((item, index) => {
+        const title = item.title || "Untitled";
+        const author =
+          item.creators.length > 1
+            ? `${item.creators[0].lastName} et al.`
+            : item.creators.length == 1
+              ? item.creators[0].lastName
+              : "unknown";
+        const year =
+          item.date && typeof item.date === "string" ? item.date.split("-")[0] : item.date || "";
+        const itemString = item ? JSON.stringify(item).replace(/"/g, "&quot;") : "{}";
+        return `
+          <div class="zotero-dropdown-item" data-index="${index}"
+               onclick="selectCitation(${itemString})">
+            <div class="ms-font-m zotero-result-title">${title}</div>
+            <div class="ms-font-s zotero-result-meta">${author} (${year}) • Recent</div>
+          </div>
+        `;
+      })
+      .join("");
+
+    resultsContainer.innerHTML = resultsList;
+    showSearchDropdown();
+  } catch (error) {
+    console.error("Error loading recent citations:", error);
+    const resultsContainer = document.getElementById("search-results");
+    if (resultsContainer) {
+      resultsContainer.innerHTML =
+        '<div class="zotero-dropdown-empty">Error loading recent citations.</div>';
+      showSearchDropdown();
+    }
   }
 }
