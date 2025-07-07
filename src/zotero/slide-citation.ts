@@ -1,5 +1,6 @@
 import { ZoteroItemData } from "zotero-api-client";
 import { CITATION_TAG_KEY, CitationStore } from "./citation-store";
+import { getJournalAbbreviation } from "./journal-abbreviations";
 
 export async function getCurrentSlide(
   context?: PowerPoint.RequestContext
@@ -101,16 +102,21 @@ class CitationFormatter {
     this._delimeter = delimeter;
   }
 
-  public format(citation: ZoteroItemData): FormattedText[] {
+  private async getJournalAbbreviation(citation: ZoteroItemData): Promise<string | null> {
+    if (!citation.publicationTitle) {
+      return null;
+    }
+    return (await getJournalAbbreviation(citation.publicationTitle)) ?? citation.publicationTitle;
+  }
+
+  async format(citation: ZoteroItemData): Promise<FormattedText[]> {
     const year =
       citation.date && typeof citation.date === "string"
         ? citation.date.split("-")[0]
         : citation.date || "n.d.";
     const creator = citation.creators[0];
     const etal = citation.creators && citation.creators.length > 1 ? " et al." : "";
-    const journalAbbreviation = citation.publicationTitle
-      ? citation.publicationTitle
-      : "Unknown Journal";
+    const journalAbbreviation = (await this.getJournalAbbreviation(citation)) ?? "";
 
     // Replace placeholders with actual values
     let text = this._format
@@ -231,7 +237,7 @@ export async function showCitationsOnSlide(
       if (!citation) {
         continue;
       }
-      const formattedSegments = citationFormatter.format(citation);
+      const formattedSegments = await citationFormatter.format(citation);
 
       for (const segment of formattedSegments) {
         const startIndex = completeText.length;
