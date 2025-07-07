@@ -99,11 +99,11 @@ ul {
   flex-direction: column;
   -webkit-flex-wrap: nowrap;
   flex-wrap: nowrap;
-  -webkit-align-items: center;
-  align-items: center;
+  -webkit-align-items: stretch;
+  align-items: stretch;
   -webkit-flex: 1 0 0;
   flex: 1 0 0;
-  padding: 10px 10px;
+  padding: 10px;
   background-color: #f8f9fa;
 }
 
@@ -181,12 +181,12 @@ b {
 }
 
 .zotero-results {
-  max-height: 300px;
   overflow-y: auto;
   border: 1px solid #ddd;
-  padding: 10px;
+  padding: 15px;
   width: 100%;
   box-sizing: border-box;
+  flex: 1;
 }
 
 .zotero-status-section {
@@ -205,12 +205,14 @@ b {
 
 .zotero-result-title {
   font-weight: bold;
-  margin-bottom: 5px;
+  margin-bottom: 6px;
+  line-height: 1.3;
 }
 
 .zotero-result-meta {
   color: #666;
   font-size: 0.9em;
+  margin-bottom: 8px;
 }
 
 .app-body-hidden {
@@ -218,80 +220,123 @@ b {
 }
 
 .citation-item {
+  margin-bottom: 0px;
+  padding: 12px;
+  border-radius: 0px;
   border-left: 3px solid #0078d7;
   background-color: #f8f9fa;
-}
-
-.citation-actions {
-  margin-top: 8px;
-}
-
-.citation-actions .ms-Button {
-  font-size: 12px;
-  padding: 4px 8px;
-}
-
-/* Dropdown styles for search */
-.zotero-search-dropdown {
   position: relative;
+  display: flex;
+  align-items: flex-start;
+  transition: all 0.2s ease;
 }
 
-.zotero-dropdown-container {
+.citation-item.dragging {
+  opacity: 0.3;
+  /* transform: rotate(2deg) scale(0.95); */
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  /* border: 2px dashed #0078d7; */
+  background-color: rgba(0, 120, 215, 0.1);
+}
+
+.citation-item.drop-above::before {
+  content: "";
   position: absolute;
-  top: 100%;
+  top: -3px;
   left: 0;
   right: 0;
-  z-index: 1000;
-  background: white;
-  border: 1px solid #ccc;
-  border-top: none;
-  border-radius: 0 0 4px 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  max-height: 300px;
-  overflow-y: auto;
+  height: 3px;
+  background: linear-gradient(90deg, #0078d7, #005a9e);
+  border-radius: 2px;
+  z-index: 10;
+  box-shadow: 0 1px 3px rgba(0, 120, 215, 0.5);
 }
 
-.zotero-dropdown-container.hidden {
-  display: none;
+.citation-item.drop-below::after {
+  content: "";
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #0078d7, #005a9e);
+  border-radius: 2px;
+  z-index: 10;
+  box-shadow: 0 1px 3px rgba(0, 120, 215, 0.5);
 }
 
-.zotero-dropdown-list {
-  padding: 0;
-  margin: 0;
-}
-
-.zotero-dropdown-item {
-  padding: 12px 16px;
-  border-bottom: 1px solid #eee;
-  cursor: pointer;
-  background-color: white;
-  transition: background-color 0.15s ease;
-}
-
-.zotero-dropdown-item:last-child {
-  border-bottom: none;
-}
-
-.zotero-dropdown-item:hover,
-.zotero-dropdown-item.highlighted {
-  background-color: #f5f5f5;
-}
-
-.zotero-dropdown-item.selected {
-  background-color: #0078d7;
-  color: white;
-  /* Ensure selected item is visible */
-  scroll-margin-top: 4px;
-  scroll-margin-bottom: 4px;
-}
-
-.zotero-dropdown-item.selected .zotero-result-meta {
-  color: #e6f3ff;
-}
-
-.zotero-dropdown-empty {
-  padding: 12px 16px;
+.citation-drag-handle {
+  padding: 8px 4px;
+  cursor: grab;
   color: #666;
-  font-style: italic;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  margin-right: 8px;
+  transition: color 0.2s ease;
+}
+
+.citation-drag-handle:hover {
+  color: #0078d7;
+}
+
+.citation-drag-handle:active {
+  cursor: grabbing;
+}
+
+.citation-item[draggable="true"] {
+  cursor: move;
+}
+
+.citation-item[draggable="true"]:hover {
+  background-color: rgba(0, 120, 215, 0.05);
+  border-left-color: #005a9e;
+}
+
+/* Ghost element for drag preview */
+.drag-ghost {
+  opacity: 0.8;
+  background-color: white;
+  border: 2px solid #0078d7;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  /* transform: rotate(3deg); */
+}
+
+/* Drop zone highlighting */
+.drop-zone-active {
+  background-color: rgba(0, 120, 215, 0.05);
+  /* border: 2px dashed #0078d7; */
+  border-radius: 4px;
+}
+
+/* Animation for smooth transitions */
+@keyframes dropIndicator {
+  0% {
+    opacity: 0;
+    transform: scaleX(0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+/* Make the citations section expand to fill available space */
+.ms-Grid:last-child {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.ms-Grid:last-child .ms-Grid-row {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.ms-Grid:last-child .ms-Grid-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }

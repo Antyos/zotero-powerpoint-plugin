@@ -12,6 +12,7 @@ import {
   debugSlideTags,
   removeCitationFromSlide,
   showCitationsOnSlide,
+  updateCitationKeysOrder,
 } from "../zotero/slide-citation";
 
 const SEARCH_DEBOUNCE_MS = 300;
@@ -323,6 +324,26 @@ async function insertCitation(citation: ZoteroItemData) {
 }
 (window as any).insertCitation = insertCitation;
 
+// Global function for citation removal (called from HTML onclick)
+async function removeCitation(citationId: string) {
+  try {
+    console.log(`Removing citation: ${citationId}`);
+
+    const success = await removeCitationFromSlide(citationId);
+
+    if (success) {
+      console.log("Citation removed successfully");
+      // Refresh the current citations list
+      setTimeout(updateCitationsPanel, 500);
+    } else {
+      console.warn("Citation not found for removal");
+    }
+  } catch (error) {
+    console.error("Citation removal error:", error);
+  }
+}
+(window as any).removeCitation = removeCitation;
+
 async function updateCitationsPanel() {
   try {
     console.log("Loading current citations from slide...");
@@ -349,7 +370,7 @@ function displayCitationsOnTaskpane(citations: ZoteroItemData[]) {
   }
 
   const citationsList = citations
-    .map((citation) => {
+    .map((citation, index) => {
       const year =
         citation.date && typeof citation.date === "string"
           ? citation.date.split("-")[0]
@@ -360,15 +381,22 @@ function displayCitationsOnTaskpane(citations: ZoteroItemData[]) {
           : "unknown";
       return `
         <div class="ms-ListItem zotero-result-item citation-item"
-             data-citation-id="${citation.key}">
-          <div class="ms-font-m zotero-result-title">${citation.title}</div>
-          <div class="ms-font-s zotero-result-meta">
-            Author: ${creator} | Year: ${year}
+             data-citation-id="${citation.key}"
+             data-citation-index="${index}"
+             draggable="true">
+          <div class="citation-drag-handle">
+            <i class="ms-Icon ms-Icon--GripperBarHorizontal"></i>
           </div>
-          <div class="citation-actions">
-            <button class="ms-Button ms-Button--small" onclick="removeCitation('${citation.key}')">
-              <span class="ms-Button-label">Remove</span>
-            </button>
+          <div class="citation-content">
+            <div class="ms-font-m zotero-result-title">${citation.title}</div>
+            <div class="ms-font-s zotero-result-meta">
+              Author: ${creator} | Year: ${year}
+            </div>
+            <div class="citation-actions">
+              <button class="ms-Button ms-Button--small" onclick="removeCitation('${citation.key}')">
+                <span class="ms-Button-label">Remove</span>
+              </button>
+            </div>
           </div>
         </div>
       `;
@@ -376,34 +404,140 @@ function displayCitationsOnTaskpane(citations: ZoteroItemData[]) {
     .join("");
 
   citationsContainer.innerHTML = citationsList;
+
+  // Add drag and drop event listeners
+  setupCitationDragAndDrop(citations);
 }
 
-// Global function for citation removal (called from HTML onclick)
-async function removeCitation(citationId: string) {
+// Drag and drop functionality
+function setupCitationDragAndDrop(citations: ZoteroItemData[]) {
+  const citationItems = document.querySelectorAll(".citation-item");
+  let draggedElement: HTMLElement | null = null;
+  let draggedIndex = -1;
+
+  citationItems.forEach((item) => {
+    const element = item as HTMLElement;
+
+    element.addEventListener("dragstart", (e) => {
+      draggedElement = element;
+      draggedIndex = parseInt(element.getAttribute("data-citation-index") || "-1");
+      element.classList.add("dragging");
+
+      // Set drag effect
+      if (e.dataTransfer) {
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/html", element.outerHTML);
+      }
+    });
+
+    element.addEventListener("dragend", () => {
+      element.classList.remove("dragging");
+      // Remove all drop indicators
+      citationItems.forEach((item) => {
+        item.classList.remove("drop-above", "drop-below");
+      });
+    });
+
+    element.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      if (e.dataTransfer) {
+        e.dataTransfer.dropEffect = "move";
+      }
+
+      if (draggedElement && draggedElement !== element) {
+        const rect = element.getBoundingClientRect();
+        const midPoint = rect.top + rect.height / 2;
+        const mouseY = e.clientY;
+
+        // Remove previous indicators
+        element.classList.remove("drop-above", "drop-below");
+
+        // Add appropriate indicator
+        if (mouseY < midPoint) {
+          element.classList.add("drop-above");
+        } else {
+          element.classList.add("drop-below");
+        }
+      }
+    });
+
+    element.addEventListener("dragleave", (e) => {
+      // Only remove indicators if we're actually leaving the element
+      const rect = element.getBoundingClientRect();
+      const x = e.clientX;
+      const y = e.clientY;
+
+      if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+        element.classList.remove("drop-above", "drop-below");
+      }
+    });
+
+    element.addEventListener("drop", (e) => {
+      e.preventDefault();
+
+      if (!draggedElement || draggedElement === element) {
+        return;
+      }
+
+      const targetIndex = parseInt(element.getAttribute("data-citation-index") || "-1");
+      const rect = element.getBoundingClientRect();
+      const midPoint = rect.top + rect.height / 2;
+      const mouseY = e.clientY;
+
+      let newIndex = targetIndex;
+      if (mouseY > midPoint) {
+        newIndex = targetIndex + 1;
+      }
+
+      // Adjust for items moving up vs down
+      if (draggedIndex < newIndex) {
+        newIndex--;
+      }
+
+      if (draggedIndex !== newIndex && draggedIndex >= 0 && newIndex >= 0) {
+        reorderCitations(citations, draggedIndex, newIndex);
+      }
+
+      // Clean up
+      element.classList.remove("drop-above", "drop-below");
+    });
+  });
+}
+
+async function reorderCitations(citations: ZoteroItemData[], fromIndex: number, toIndex: number) {
   try {
-    console.log(`Removing citation: ${citationId}`);
+    console.log(`Reordering citation from index ${fromIndex} to ${toIndex}`);
 
-    const success = await removeCitationFromSlide(citationId);
+    // Create new array with reordered citations
+    const reorderedCitations = [...citations];
+    const [movedCitation] = reorderedCitations.splice(fromIndex, 1);
+    reorderedCitations.splice(toIndex, 0, movedCitation);
 
-    if (success) {
-      console.log("Citation removed successfully");
-      // Refresh the current citations list
-      setTimeout(updateCitationsPanel, 500);
-    } else {
-      console.warn("Citation not found for removal");
-    }
+    // Update the slide with the new order
+    await updateCitationOrder(reorderedCitations);
+
+    // Refresh the display
+    setTimeout(updateCitationsPanel, 500);
   } catch (error) {
-    console.error("Citation removal error:", error);
+    console.error("Error reordering citations:", error);
   }
 }
-(window as any).removeCitation = removeCitation;
 
-export async function run() {
-  /**
-   * Insert your PowerPoint code here
-   */
-  const options: Office.SetSelectedDataOptions = { coercionType: Office.CoercionType.Text };
+async function updateCitationOrder(reorderedCitations: ZoteroItemData[]) {
+  try {
+    // Extract the citation keys in the new order
+    const orderedKeys = reorderedCitations.map((c) => c.key);
 
-  await Office.context.document.setSelectedDataAsync(" ", options);
-  await Office.context.document.setSelectedDataAsync("Hello World!", options);
+    // Update the citation key order on the slide
+    await updateCitationKeysOrder(orderedKeys);
+
+    console.log("Citation order updated successfully:", orderedKeys);
+
+    // Refresh the display to reflect the new order
+    await updateCitationsPanel();
+  } catch (error) {
+    console.error("Failed to update citation order:", error);
+    // Optionally show user feedback about the error
+    throw error;
+  }
 }

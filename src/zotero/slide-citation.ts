@@ -364,6 +364,28 @@ export async function getCitationKeysOnSlide(slide?: PowerPoint.Slide): Promise<
 }
 
 /**
+ * Update the order of citation keys on the current slide
+ */
+export async function updateCitationKeysOrder(
+  orderedKeys: string[],
+  slide?: PowerPoint.Slide
+): Promise<void> {
+  if (!slide) {
+    slide = await getCurrentSlide();
+  }
+
+  const context = slide.context;
+  const tags = slide.tags;
+  await context.sync();
+
+  // Update the citation tag with the new order
+  tags.add(CITATION_TAG_KEY, orderedKeys.join(","));
+  await context.sync();
+
+  console.log(`Updated citation order on slide: ${orderedKeys.join(", ")}`);
+}
+
+/**
  * High-level convenience functions
  */
 
