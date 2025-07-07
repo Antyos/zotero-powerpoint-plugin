@@ -37,13 +37,32 @@ export async function getCurrentSlide(
   return currentSlide;
 }
 
+async function getCitationTextBox(
+  slide: PowerPoint.Slide,
+  citationBoxName: string,
+  createIfMissing: true
+): Promise<PowerPoint.Shape>;
+
+async function getCitationTextBox(
+  slide: PowerPoint.Slide,
+  citationBoxName: string,
+  createIfMissing: false
+): Promise<PowerPoint.Shape | null>;
+
+async function getCitationTextBox(
+  slide: PowerPoint.Slide,
+  citationBoxName: string,
+  createIfMissing: boolean
+): Promise<PowerPoint.Shape | null>;
+
 /**
  * Get or create a text box for citations on the slide
  */
 async function getCitationTextBox(
   slide: PowerPoint.Slide,
-  citationBoxName: string = "Citations"
-): Promise<PowerPoint.Shape> {
+  citationBoxName: string = "Citations",
+  createIfMissing: boolean = true
+): Promise<PowerPoint.Shape | null> {
   const shapes = slide.shapes;
   shapes.load("items");
   await slide.context.sync();
@@ -58,6 +77,10 @@ async function getCitationTextBox(
   let citationBox = shapes.items.find((shape) => namePattern.test(shape.name || ""));
   if (citationBox) {
     return citationBox;
+  }
+  // Not every situation requires creating a new citation box
+  if (!createIfMissing) {
+    return null;
   }
   // Check the slide layout master for a hidden citation box
   const slideLayout = slide.layout;
@@ -269,8 +292,12 @@ export async function showCitationsOnSlide(
     // Get the citation shape name from configuration
     const zoteroLibrary = ZoteroLibrary.getInstance();
     const citationShapeName = zoteroLibrary.getCitationShapeName();
-    const citationBox = await getCitationTextBox(slide, citationShapeName);
+    // Don't create a new citation box if there are no citations to show
+    const citationBox = await getCitationTextBox(slide, citationShapeName, citations.length > 0);
 
+    if (!citationBox) {
+      return;
+    }
     if (citationBox && citations.length === 0) {
       // The API seems to be missing a hide() method, so we'll just delete it and recreate it later
       // if needed.
