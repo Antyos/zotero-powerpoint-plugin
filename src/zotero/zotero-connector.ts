@@ -165,11 +165,15 @@ export class ZoteroLibrary {
     return response.getResponseType() === "SingleReadResponse";
   }
 
-  public async quickSearch(query: string, opts?: RequestOptions): Promise<ZoteroItemData[]> {
+  public async quickSearch(
+    query: string,
+    maxResults: number = 5,
+    opts?: RequestOptions
+  ): Promise<ZoteroItemData[]> {
     try {
       const response = await ZoteroLibrary.getClient()
         .items()
-        .get({ ...opts, q: query, itemType: "-attachment", limit: 5 });
+        .get({ ...opts, q: query, itemType: "-attachment", limit: maxResults });
       const itemData = this.isSingleResponse(response) ? [response.getData()] : response.getData();
       console.log("Quick search results:", itemData);
       if (!itemData || itemData.length === 0) {
