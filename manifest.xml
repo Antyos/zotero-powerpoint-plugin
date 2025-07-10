@@ -11,9 +11,9 @@
   <Description DefaultValue="A template to get started." />
   <IconUrl DefaultValue="https://localhost:3000/assets/icon-32.png" />
   <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/icon-64.png" />
-  <SupportUrl DefaultValue="https://www.contoso.com/help" />
+  <SupportUrl DefaultValue="https://github.com/Antyos/zotero-powerpoint-plugin/" />
   <AppDomains>
-    <AppDomain>https://www.contoso.com</AppDomain>
+    <AppDomain>https://antyos.github.io/zotero-powerpoint-plugin/</AppDomain>
   </AppDomains>
   <Hosts>
     <Host Name="Presentation" />
