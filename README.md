@@ -30,6 +30,14 @@ For the full instructions see: <https://learn.microsoft.com/en-us/office/dev/add
 5. On the ribbon, go to "Home > Add-ins". Click "Advanced" at the bottom left,
    and select the add-in.
 
+#### Troubleshooting
+
+If you update the add-in and it is not reflecting the changes, you may need to
+clear the Office plugin cache.
+
+1. In PowerPoint, go to **File > Options > Trust Center > Trust Center Settings > Trusted Add-in Catalogs** and check the box "Next time Office starts, clear all previously-started web add-in cache".
+2. Click "OK" and restart PowerPoint.
+
 ### Setup Zotero API Key
 
 1. Obtain your Zotero API key from your Zotero account settings.
