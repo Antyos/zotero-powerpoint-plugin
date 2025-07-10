@@ -147,6 +147,7 @@ function initializeZoteroUI() {
       clearTimeout(searchTimeout);
       searchTimeout = setTimeout(() => {
         const query = (searchInput as HTMLInputElement).value.trim();
+        console.log(`Search input changed: "${query}"`);
         if (query.length > 0) {
           searchZoteroLibrary();
         } else {
@@ -200,7 +201,8 @@ function initializeZoteroUI() {
     // Hide dropdown when clicking outside
     document.addEventListener("click", (e) => {
       const searchContainer = document.querySelector(".zotero-search-dropdown");
-      if (searchContainer && !searchContainer.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (searchContainer && !searchContainer.contains(target)) {
         hideSearchDropdown();
       }
     });
@@ -439,7 +441,10 @@ async function searchZoteroLibrary() {
     const searchInput = document.getElementById("search-query") as HTMLInputElement;
     const query = searchInput?.value?.trim();
 
+    console.log(`Searching Zotero library for: "${query}"`);
+
     if (!query) {
+      console.log("Empty query, skipping search");
       return;
     }
 
@@ -447,38 +452,61 @@ async function searchZoteroLibrary() {
     const zotero = ZoteroLibrary.getInstance();
 
     if (!zotero.isConfigured()) {
-      console.log("Please configure Zotero API settings first.");
+      console.log("Zotero not configured, showing configuration message");
+      const resultsContainer = document.getElementById("search-results");
+      if (resultsContainer) {
+        resultsContainer.innerHTML =
+          '<div class="zotero-dropdown-empty">Please configure Zotero API settings first.</div>';
+        showSearchDropdown();
+      }
       return;
     }
 
     const results = await zotero.quickSearch(query);
     displaySearchResults(results);
-    console.log(`Found ${results.length} items.`);
+    console.log(`Search completed. Found ${results.length} items.`);
   } catch (error) {
     console.error("Search error:", error);
+    const resultsContainer = document.getElementById("search-results");
+    if (resultsContainer) {
+      resultsContainer.innerHTML =
+        '<div class="zotero-dropdown-empty">Search failed. Please check your configuration.</div>';
+      showSearchDropdown();
+    }
   }
 }
 
 function showSearchDropdown() {
   const dropdown = document.getElementById("search-dropdown");
   if (dropdown) {
+    console.log("Showing search dropdown");
     dropdown.classList.remove("hidden");
+  } else {
+    console.error("Search dropdown element not found");
   }
 }
 
 function hideSearchDropdown() {
   const dropdown = document.getElementById("search-dropdown");
   if (dropdown) {
+    console.log("Hiding search dropdown");
     dropdown.classList.add("hidden");
   }
 }
 
 function displaySearchResults(results: ZoteroItemData[]) {
   const resultsContainer = document.getElementById("search-results");
-  if (!resultsContainer) return;
+  if (!resultsContainer) {
+    console.error("Search results container not found");
+    return;
+  }
+
+  console.log(`Displaying ${results.length} search results`);
 
   // Store results for keyboard navigation
-  (window as any).setSearchResults(results);
+  if (typeof (window as any).setSearchResults === "function") {
+    (window as any).setSearchResults(results);
+  }
 
   if (results.length === 0) {
     resultsContainer.innerHTML = '<div class="zotero-dropdown-empty">No results found.</div>';
@@ -500,7 +528,7 @@ function displaySearchResults(results: ZoteroItemData[]) {
       const itemString = item ? JSON.stringify(item).replace(/"/g, "&quot;") : "{}";
       return `
         <div class="zotero-dropdown-item" data-index="${index}"
-             onclick="selectCitation(${itemString})">
+             onclick="window.selectCitation && window.selectCitation(${itemString})">
           <div class="ms-font-m zotero-result-title">${title}</div>
           <div class="ms-font-s zotero-result-meta">${author} (${year})</div>
         </div>
@@ -760,7 +788,9 @@ async function showRecentCitations() {
     if (!resultsContainer) return;
 
     // Store results for keyboard navigation
-    (window as any).setSearchResults(recentCitations);
+    if (typeof (window as any).setSearchResults === "function") {
+      (window as any).setSearchResults(recentCitations);
+    }
 
     if (recentCitations.length === 0) {
       resultsContainer.innerHTML = '<div class="zotero-dropdown-empty">No recent citations.</div>';
@@ -782,7 +812,7 @@ async function showRecentCitations() {
         const itemString = item ? JSON.stringify(item).replace(/"/g, "&quot;") : "{}";
         return `
           <div class="zotero-dropdown-item" data-index="${index}"
-               onclick="selectCitation(${itemString})">
+               onclick="window.selectCitation && window.selectCitation(${itemString})">
             <div class="ms-font-m zotero-result-title">${title}</div>
             <div class="ms-font-s zotero-result-meta">${author} (${year}) • Recent</div>
           </div>
