@@ -441,6 +441,10 @@ async function searchZoteroLibrary() {
     const searchInput = document.getElementById("search-query") as HTMLInputElement;
     const query = searchInput?.value?.trim();
 
+    const resultsContainer = document.getElementById("search-results");
+    if (resultsContainer) {
+      resultsContainer.innerHTML = `<div class="zotero-dropdown-loading">Searching...</div>`;
+    }
     console.log(`Searching Zotero library for: "${query}"`);
 
     if (!query) {
@@ -453,7 +457,6 @@ async function searchZoteroLibrary() {
 
     if (!zotero.isConfigured()) {
       console.log("Zotero not configured, showing configuration message");
-      const resultsContainer = document.getElementById("search-results");
       if (resultsContainer) {
         resultsContainer.innerHTML =
           '<div class="zotero-dropdown-empty">Please configure Zotero API settings first.</div>';
