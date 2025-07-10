@@ -169,7 +169,7 @@ function initializeZoteroUI() {
     // Handle keyboard navigation
     searchInput.addEventListener("keydown", (e) => {
       const dropdown = document.getElementById("search-dropdown");
-      if (!dropdown || dropdown.classList.contains("hidden")) {
+      if (!dropdown || dropdown.hidden) {
         return;
       }
 
@@ -259,11 +259,11 @@ function showSettingsPanel() {
     const mainContent = document.getElementById("main-content");
 
     if (settingsPanel) {
-      settingsPanel.classList.remove("hidden");
+      settingsPanel.hidden = false;
     }
 
     if (mainContent) {
-      mainContent.classList.add("hidden");
+      mainContent.hidden = true;
     }
   } catch (error) {
     console.error("Error showing settings panel:", error);
@@ -279,11 +279,11 @@ function hideSettingsPanel() {
     const mainContent = document.getElementById("main-content");
 
     if (settingsPanel) {
-      settingsPanel.classList.add("hidden");
+      settingsPanel.hidden = true;
     }
 
     if (mainContent) {
-      mainContent.classList.remove("hidden");
+      mainContent.hidden = false;
     }
   } catch (error) {
     console.error("Error hiding settings panel:", error);
@@ -483,7 +483,7 @@ function showSearchDropdown() {
   const dropdown = document.getElementById("search-dropdown");
   if (dropdown) {
     console.log("Showing search dropdown");
-    dropdown.classList.remove("hidden");
+    dropdown.hidden = false;
   } else {
     console.error("Search dropdown element not found");
   }
@@ -493,7 +493,7 @@ function hideSearchDropdown() {
   const dropdown = document.getElementById("search-dropdown");
   if (dropdown) {
     console.log("Hiding search dropdown");
-    dropdown.classList.add("hidden");
+    dropdown.hidden = true;
   }
 }
 

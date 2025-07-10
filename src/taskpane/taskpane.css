@@ -235,10 +235,6 @@ b {
   display: none;
 }
 
-.hidden {
-  display: none !important;
-}
-
 .citation-item {
   margin-bottom: 0px;
   padding: 12px;
@@ -373,10 +369,6 @@ b {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   max-height: 300px;
   overflow-y: auto;
-}
-
-.zotero-dropdown-container.hidden {
-  display: none;
 }
 
 .zotero-dropdown-list {
@@ -540,15 +532,6 @@ textarea.form-input {
 .zotero-main-content {
   display: block;
 }
-
-.zotero-main-content.hidden {
-  display: none;
-}
-
-.zotero-settings-panel.hidden {
-  display: none;
-}
-
 /* Button Styles */
 .zotero-button-primary {
   background-color: #0078d4;
