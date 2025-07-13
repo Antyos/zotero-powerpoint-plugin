@@ -44,7 +44,7 @@ function initializeZoteroUI() {
   // Settings panel elements
   const configureButton = document.getElementById("configure-zotero");
   if (configureButton) {
-    configureButton.onclick = () => showSettingsPanel(true);
+    configureButton.onclick = showSettingsPanel;
   }
 
   const closeSettingsButton = document.getElementById("close-settings");
@@ -245,7 +245,7 @@ function initializeZoteroUI() {
   updateCitationsPanel(false);
 }
 
-function showSettingsPanel(show: boolean = true) {
+function _showSettingsPanel(show: boolean = true) {
   const showOrHide: string = show ? "Showing" : "Hiding";
   try {
     console.debug(`${showOrHide} settings panel...`);
@@ -266,8 +266,12 @@ function showSettingsPanel(show: boolean = true) {
   }
 }
 
+function showSettingsPanel() {
+  return _showSettingsPanel(true);
+}
+
 function hideSettingsPanel() {
-  return showSettingsPanel(false);
+  return _showSettingsPanel(false);
 }
 
 function loadCurrentSettingsConfig() {
@@ -848,7 +852,7 @@ function validateCitationFormats(
   try {
     // Clear previous error
     errorContainer.textContent = "";
-    errorContainer.classList.remove("error-visible");
+    errorContainer.style.display = "none";
 
     // If empty, that's okay - just clear the dropdown
     if (!formatsText.trim()) {
@@ -893,7 +897,7 @@ function validateCitationFormats(
     // Show error message
     const errorMessage = error instanceof Error ? error.message : "Invalid JSON format";
     errorContainer.textContent = errorMessage;
-    errorContainer.classList.add("error-visible");
+    errorContainer.style.display = "block";
 
     // Clear the dropdown and disable save button on error
     populateSettingsCitationFormatOptions({});

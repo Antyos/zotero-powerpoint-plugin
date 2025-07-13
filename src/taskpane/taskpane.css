@@ -429,6 +429,10 @@ b {
   flex-direction: column;
 }
 
+.zotero-settings-panel[hidden] {
+  display: none !important;
+}
+
 .zotero-settings-panel .ms-welcome__header {
   flex-shrink: 0;
 }
