@@ -50,7 +50,7 @@
         </div>
       </div>
     </header>
-      <!-- Settings Panel (initially hidden) -->
+    <!-- Settings Panel (initially hidden) -->
     <section id="settings-panel" class="ms-Grid zotero-settings-panel" hidden>
       <header class="ms-welcome__header ms-bgColor-neutralLighter">
         <div class="header-content">
@@ -66,122 +66,138 @@
             <h1 class="ms-font-xl header-title">Zotero Configuration</h1>
           </div>
           <div class="header-right">
-            <button id="close-settings" class="ms-Button header-settings-btn" title="Close Settings">
+            <button
+              id="close-settings"
+              class="ms-Button header-settings-btn"
+              title="Close Settings"
+            >
               <i class="ms-Icon ms-Icon--ChromeClose"></i>
             </button>
           </div>
         </div>
       </header>
-      
+
       <div class="settings-content">
         <form id="settings-form">
-            <div class="form-group">
-              <label class="form-label" for="settings-api-key">API Key</label>
-              <input
-                type="password"
-                id="settings-api-key"
-                class="form-input"
-                placeholder="Enter your Zotero API key (leave blank to keep existing)"
-              />
-              <div class="help-text">
-                Generate a new API key from your
-                <a href="https://www.zotero.org/settings/keys/new" target="_blank" rel="noopener noreferrer">Zotero Settings</a>.
-                Make sure to select the <strong>Allow Library Access</strong> permission.
-                <br /><strong>Leave blank to keep your existing API key.</strong>
-              </div>
-              <div class="error-message" id="settings-api-key-error"></div>
+          <div class="form-group">
+            <label class="form-label" for="settings-api-key">API Key</label>
+            <input
+              type="password"
+              id="settings-api-key"
+              class="form-input"
+              placeholder="Enter your Zotero API key (leave blank to keep existing)"
+            />
+            <div class="help-text">
+              Generate a new API key from your
+              <a
+                href="https://www.zotero.org/settings/keys/new"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Zotero Settings</a
+              >. Make sure to select the <strong>Allow Library Access</strong> permission.
+              <br /><strong>Leave blank to keep your existing API key.</strong>
             </div>
+            <div class="error-message" id="settings-api-key-error"></div>
+          </div>
 
-            <div class="form-group">
-              <label class="form-label" for="settings-user-id">User ID *</label>
-              <input
-                type="number"
-                id="settings-user-id"
-                class="form-input"
-                placeholder="Enter your Zotero User ID"
-                required
-              />
-              <div class="help-text">
-                Find your User ID in your
-                <a href="https://www.zotero.org/settings/security#applications" target="_blank" rel="noopener noreferrer">Zotero settings > Applications</a>.
-              </div>
-              <div class="error-message" id="settings-user-id-error"></div>
+          <div class="form-group">
+            <label class="form-label" for="settings-user-id">User ID *</label>
+            <input
+              type="number"
+              id="settings-user-id"
+              class="form-input"
+              placeholder="Enter your Zotero User ID"
+              required
+            />
+            <div class="help-text">
+              Find your User ID in your
+              <a
+                href="https://www.zotero.org/settings/security#applications"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Zotero settings > Applications</a
+              >.
             </div>
+            <div class="error-message" id="settings-user-id-error"></div>
+          </div>
 
-            <div class="form-group">
-              <label class="form-label" for="settings-user-type">User Type</label>
-              <select id="settings-user-type" class="form-select">
-                <option value="user">User</option>
-                <option value="group">Group</option>
-              </select>
-              <div class="help-text">Select "User" for personal library, "Group" for group library</div>
+          <div class="form-group">
+            <label class="form-label" for="settings-user-type">User Type</label>
+            <select id="settings-user-type" class="form-select">
+              <option value="user">User</option>
+              <option value="group">Group</option>
+            </select>
+            <div class="help-text">
+              Select "User" for personal library, "Group" for group library
             </div>
+          </div>
 
-            <div class="form-group">
-              <label class="form-label" for="settings-search-limit">Search Results Limit</label>
-              <input
-                type="number"
-                id="settings-search-limit"
-                class="form-input"
-                placeholder="5"
-                min="1"
-                max="50"
-                value="5"
-              />
-              <div class="help-text">Maximum number of search results to display (1-50)</div>
-            </div>
+          <div class="form-group">
+            <label class="form-label" for="settings-search-limit">Search Results Limit</label>
+            <input
+              type="number"
+              id="settings-search-limit"
+              class="form-input"
+              placeholder="5"
+              min="1"
+              max="50"
+              value="5"
+            />
+            <div class="help-text">Maximum number of search results to display (1-50)</div>
+          </div>
 
-            <div class="form-group">
-              <label class="form-label" for="settings-citation-formats">Citation Formats (JSON)</label>
-              <textarea
-                id="settings-citation-formats"
-                class="form-input"
-                rows="4"
-                placeholder='{"default": {"format": "<b>[{#}] {creator}</b>, {year}, <i>{journalAbbreviation}</i>", "delimiter": ";  "}}'
-              ></textarea>
-              <div class="help-text">
-                Define available citation formats as JSON object with format IDs and format objects
-                containing 'format' and optional 'delimiter' properties.
-              </div>
-              <div class="error-message" id="settings-citation-formats-error"></div>
+          <div class="form-group">
+            <label class="form-label" for="settings-citation-formats"
+              >Citation Formats (JSON)</label
+            >
+            <textarea
+              id="settings-citation-formats"
+              class="form-input"
+              rows="4"
+              placeholder='{"default": {"format": "<b>[{#}] {creator}</b>, {year}, <i>{journalAbbreviation}</i>", "delimiter": ";  "}}'
+            ></textarea>
+            <div class="help-text">
+              Define available citation formats as JSON object with format IDs and format objects
+              containing 'format' and optional 'delimiter' properties.
             </div>
+            <div class="error-message" id="settings-citation-formats-error"></div>
+          </div>
 
-            <div class="form-group">
-              <label class="form-label" for="settings-selected-format">Citation Format</label>
-              <select id="settings-selected-format" class="form-select">
-                <option value="">Select a format...</option>
-              </select>
-              <div class="help-text">Choose the citation format to use</div>
-            </div>
+          <div class="form-group">
+            <label class="form-label" for="settings-selected-format">Citation Format</label>
+            <select id="settings-selected-format" class="form-select">
+              <option value="">Select a format...</option>
+            </select>
+            <div class="help-text">Choose the citation format to use</div>
+          </div>
 
-            <div class="form-group">
-              <label class="form-label" for="settings-citation-shape">Citation Shape Name</label>
-              <input
-                type="text"
-                id="settings-citation-shape"
-                class="form-input"
-                placeholder="Citation"
-                value="Citation"
-              />
-              <div class="help-text">
-                RegEx for citation text box names in PowerPoint slides. Text box names can be changed in
-              the <b>Selection Pane</b>.
-              </div>
+          <div class="form-group">
+            <label class="form-label" for="settings-citation-shape">Citation Shape Name</label>
+            <input
+              type="text"
+              id="settings-citation-shape"
+              class="form-input"
+              placeholder="Citation"
+              value="Citation"
+            />
+            <div class="help-text">
+              RegEx for citation text box names in PowerPoint slides. Text box names can be changed
+              in the <b>Selection Pane</b>.
             </div>
+          </div>
 
-            <div class="button-group">
-              <button type="button" id="settings-cancel" class="ms-Button zotero-button-secondary">
-                <span class="ms-Button-label">Cancel</span>
-              </button>
-              <button type="submit" id="settings-save" class="ms-Button zotero-button-primary">
-                <span class="ms-Button-label">Save Configuration</span>
-              </button>
-            </div>
-          </form>
-        </div>
+          <div class="button-group">
+            <button type="button" id="settings-cancel" class="ms-Button zotero-button-secondary">
+              <span class="ms-Button-label">Cancel</span>
+            </button>
+            <button type="submit" id="settings-save" class="ms-Button zotero-button-primary">
+              <span class="ms-Button-label">Save Configuration</span>
+            </button>
+          </div>
+        </form>
       </div>
     </section>
-    
+
     <section id="sideload-msg" class="ms-welcome__main">
       <h2 class="ms-font-xl">
         Please
@@ -199,79 +215,80 @@
       <div id="main-content" class="zotero-main-content">
         <!-- Zotero Search Section -->
         <section class="ms-Grid zotero-search-section">
-        <div class="ms-Grid-row">
-          <div class="ms-Grid-col ms-sm12">
-            <h2 class="ms-font-l">Search Zotero Library</h2>
-            <div class="zotero-search-dropdown">
-              <div class="ms-TextField zotero-search-field">
-                <input
-                  id="search-query"
-                  type="text"
-                  class="ms-TextField-field zotero-search-input"
-                  placeholder="Enter title, author, or keywords..."
-                  autocomplete="off"
-                />
-              </div>
-              <div id="search-dropdown" class="zotero-dropdown-container" hidden>
-                <div id="search-results" class="zotero-dropdown-list">
-                  <!-- Results will appear here -->
+          <div class="ms-Grid-row">
+            <div class="ms-Grid-col ms-sm12">
+              <h2 class="ms-font-l">Search Zotero Library</h2>
+              <div class="zotero-search-dropdown">
+                <div class="ms-TextField zotero-search-field">
+                  <input
+                    id="search-query"
+                    type="text"
+                    class="ms-TextField-field zotero-search-input"
+                    placeholder="Enter title, author, or keywords..."
+                    autocomplete="off"
+                  />
+                </div>
+                <div id="search-dropdown" class="zotero-dropdown-container" hidden>
+                  <div id="search-results" class="zotero-dropdown-list">
+                    <!-- Results will appear here -->
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <!-- Current Citations Section -->
-      <section class="ms-Grid">
-        <div class="ms-Grid-row">
-          <div class="ms-Grid-col ms-sm12">
-            <div class="header-content">
-              <div class="header-left">
-                <h3 class="ms-font-l">Citations in Current Slide</h3>
+        <!-- Current Citations Section -->
+        <section class="ms-Grid">
+          <div class="ms-Grid-row">
+            <div class="ms-Grid-col ms-sm12">
+              <div class="header-content">
+                <div class="header-left">
+                  <h3 class="ms-font-l">Citations in Current Slide</h3>
+                </div>
+                <div class="header-right">
+                  <button
+                    id="refresh-citations"
+                    class="ms-Button header-settings-btn"
+                    title="Refresh citations on current slide"
+                  >
+                    <i class="ms-Icon ms-Icon--Refresh"></i>
+                  </button>
+                </div>
               </div>
-              <div class="header-right">
-                <button
-                  id="refresh-citations"
-                  class="ms-Button header-settings-btn"
-                  title="Refresh citations on current slide"
-                >
-                  <i class="ms-Icon ms-Icon--Refresh"></i>
+              <div id="debug-citations-buttons" class="zotero-button-group" hidden>
+                <button id="insert-mock-citation" class="ms-Button zotero-button-secondary">
+                  <span class="ms-Button-label">Insert Mock Citation</span>
+                </button>
+                <button id="debug-slide-tags" class="ms-Button zotero-button-secondary">
+                  <span class="ms-Button-label">Debug Slide Tags</span>
+                </button>
+                <button id="debug-citation-store" class="ms-Button zotero-button-secondary">
+                  <span class="ms-Button-label">Debug CitationStore</span>
+                </button>
+                <button id="debug-citations" class="ms-Button zotero-button-secondary">
+                  <span class="ms-Button-label">Debug Citations</span>
+                </button>
+                <button id="clear-citation-store" class="ms-Button zotero-button-secondary">
+                  <span class="ms-Button-label">Clear Citation Store</span>
                 </button>
               </div>
-            </div>
-            <div id="debug-citations-buttons" class="zotero-button-group" hidden>
-              <button id="insert-mock-citation" class="ms-Button zotero-button-secondary">
-                <span class="ms-Button-label">Insert Mock Citation</span>
-              </button>
-              <button id="debug-slide-tags" class="ms-Button zotero-button-secondary">
-                <span class="ms-Button-label">Debug Slide Tags</span>
-              </button>
-              <button id="debug-citation-store" class="ms-Button zotero-button-secondary">
-                <span class="ms-Button-label">Debug CitationStore</span>
-              </button>
-              <button id="debug-citations" class="ms-Button zotero-button-secondary">
-                <span class="ms-Button-label">Debug Citations</span>
-              </button>
-              <button id="clear-citation-store" class="ms-Button zotero-button-secondary">
-                <span class="ms-Button-label">Clear Citation Store</span>
-              </button>
-            </div>
-            <!-- Current Citations Container -->
-            <div id="current-citations" class="ms-List zotero-slide-citations-container">
-              <p class="ms-font-s">No citations found in current slide.</p>
+              <!-- Current Citations Container -->
+              <div id="current-citations" class="ms-List zotero-slide-citations-container">
+                <p class="ms-font-s">No citations found in current slide.</p>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <!-- Status/Debug Section -->
-      <section class="ms-Grid zotero-status-section">
-        <div class="ms-Grid-row">
-          <div class="ms-Grid-col ms-sm12">
-            <p><label id="item-subject" class="ms-font-s"></label></p>
+        <!-- Status/Debug Section -->
+        <section class="ms-Grid zotero-status-section">
+          <div class="ms-Grid-row">
+            <div class="ms-Grid-col ms-sm12">
+              <p><label id="item-subject" class="ms-font-s"></label></p>
+            </div>
           </div>
-        </div>
+        </section>
       </div>
     </main>
   </body>
