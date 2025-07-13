@@ -79,23 +79,23 @@ ul {
   line-height: 1;
   display: flex;
   align-items: center;
-}
 
-.header-settings-btn .ms-Icon {
-  font-size: 14px;
-  height: 1em;
-  width: 1em;
-  vertical-align: baseline;
-  margin-top: 1px;
-}
+  & .ms-Icon {
+    font-size: 14px;
+    height: 1em;
+    width: 1em;
+    vertical-align: baseline;
+    margin-top: 1px;
+  }
 
-.header-settings-btn:hover {
-  background-color: rgba(0, 0, 0, 0.1);
-}
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
 
-.header-settings-btn:focus {
-  outline: 2px solid #0078d7;
-  outline-offset: 2px;
+  &:focus {
+    outline: 2px solid #0078d7;
+    outline-offset: 2px;
+  }
 }
 
 .ms-welcome__main {
@@ -111,11 +111,11 @@ ul {
   flex: 1 0 0;
   padding: 10px 10px 10px 10px;
   background-color: #f8f9fa;
-}
 
-.ms-welcome__main > h2 {
-  width: 100%;
-  text-align: center;
+  & > h2 {
+    width: 100%;
+    text-align: center;
+  }
 }
 
 .ms-welcome__features {
@@ -127,24 +127,26 @@ ul {
   padding-bottom: 20px;
   display: -webkit-flex;
   display: flex;
-}
 
-.ms-welcome__features.ms-List .ms-ListItem > .ms-Icon {
-  margin-right: 10px;
+  & > .ms-Icon {
+    margin-right: 10px;
+  }
 }
 
 .ms-welcome__action.ms-Button--hero {
   margin-top: 30px;
 }
 
-.ms-Button.ms-Button--hero .ms-Button-label {
-  color: #0078d7;
-}
+.ms-Button.ms-Button--hero {
+  & .ms-Button-label {
+    color: #0078d7;
+  }
 
-.ms-Button.ms-Button--hero:hover .ms-Button-label,
-.ms-Button.ms-Button--hero:focus .ms-Button-label {
-  color: #005a9e;
-  cursor: pointer;
+  &:hover .ms-Button-label,
+  &:focus .ms-Button-label {
+    color: #005a9e;
+    cursor: pointer;
+  }
 }
 
 b {
@@ -155,11 +157,11 @@ b {
 .zotero-search-section {
   margin-top: 4px;
   width: 100%;
-}
 
-.zotero-search-section h2 {
-  margin-top: 0;
-  margin-bottom: 8px;
+  & h2 {
+    margin-top: 0;
+    margin-bottom: 8px;
+  }
 }
 
 .zotero-section {
@@ -168,6 +170,24 @@ b {
 
 .ms-Grid {
   width: 100%;
+
+  &:last-child {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+
+    & .ms-Grid-row {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    & .ms-Grid-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+  }
 }
 
 .ms-Grid-row {
@@ -213,10 +233,10 @@ b {
   padding: 10px;
   border-bottom: 1px solid #eee;
   cursor: pointer;
-}
 
-.zotero-result-item:hover {
-  background-color: #f5f5f5;
+  &:hover {
+    background-color: #f5f5f5;
+  }
 }
 
 .zotero-result-title {
@@ -245,68 +265,52 @@ b {
   display: flex;
   align-items: flex-start;
   transition: all 0.2s ease;
-}
 
-.citation-item.dragging {
-  opacity: 0.3;
-  /* transform: rotate(2deg) scale(0.95); */
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-  z-index: 1000;
-  /* border: 2px dashed #0078d7; */
-  background-color: rgba(0, 120, 215, 0.1);
-}
+  &.dragging {
+    opacity: 0.3;
+    /* transform: rotate(2deg) scale(0.95); */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    /* border: 2px dashed #0078d7; */
+    background-color: rgba(0, 120, 215, 0.1);
+  }
 
-.citation-item.drop-above::before {
-  content: "";
-  position: absolute;
-  top: -3px;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #0078d7, #005a9e);
-  border-radius: 2px;
-  z-index: 10;
-  box-shadow: 0 1px 3px rgba(0, 120, 215, 0.5);
-}
+  &.drop-above::before {
+    content: "";
+    position: absolute;
+    top: -3px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #0078d7, #005a9e);
+    border-radius: 2px;
+    z-index: 10;
+    box-shadow: 0 1px 3px rgba(0, 120, 215, 0.5);
+    animation: dropIndicator 0.2s ease-out;
+  }
 
-.citation-item.drop-below::after {
-  content: "";
-  position: absolute;
-  bottom: -3px;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #0078d7, #005a9e);
-  border-radius: 2px;
-  z-index: 10;
-  box-shadow: 0 1px 3px rgba(0, 120, 215, 0.5);
-}
+  &.drop-below::after {
+    content: "";
+    position: absolute;
+    bottom: -3px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #0078d7, #005a9e);
+    border-radius: 2px;
+    z-index: 10;
+    box-shadow: 0 1px 3px rgba(0, 120, 215, 0.5);
+    animation: dropIndicator 0.2s ease-out;
+  }
 
-.citation-drag-handle {
-  padding: 8px 4px;
-  cursor: grab;
-  color: #666;
-  display: flex;
-  align-items: center;
-  margin-right: 8px;
-  transition: color 0.2s ease;
-}
+  &[draggable="true"] {
+    cursor: move;
 
-.citation-drag-handle:hover {
-  color: #0078d7;
-}
-
-.citation-drag-handle:active {
-  cursor: grabbing;
-}
-
-.citation-item[draggable="true"] {
-  cursor: move;
-}
-
-.citation-item[draggable="true"]:hover {
-  background-color: rgba(0, 120, 215, 0.05);
-  border-left-color: #005a9e;
+    &:hover {
+      background-color: rgba(0, 120, 215, 0.05);
+      border-left-color: #005a9e;
+    }
+  }
 }
 
 /* Animation for smooth transitions */
@@ -321,33 +325,29 @@ b {
   }
 }
 
-.citation-item.drop-above::before,
-.citation-item.drop-below::after {
-  animation: dropIndicator 0.2s ease-out;
-}
-
-/* Make the citations section expand to fill available space */
-.ms-Grid:last-child {
-  flex: 1;
+.citation-drag-handle {
+  padding: 8px 4px;
+  cursor: grab;
+  color: #666;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  margin-right: 8px;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: #0078d7;
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
 }
 
-.ms-Grid:last-child .ms-Grid-row {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.ms-Grid:last-child .ms-Grid-col {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.citation-actions .ms-Button {
-  font-size: 12px;
-  padding: 4px 8px;
+.citation-actions {
+  & .ms-Button {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
 }
 
 /* Dropdown styles for search */
@@ -382,24 +382,28 @@ b {
   cursor: pointer;
   background-color: white;
   transition: background-color 0.15s ease;
-}
 
-.zotero-dropdown-item:last-child {
-  border-bottom: none;
-}
+  &:last-child {
+    border-bottom: none;
+  }
 
-.zotero-dropdown-item:hover,
-.zotero-dropdown-item.highlighted {
-  background-color: #f5f5f5;
-}
+  &:hover,
+  &.highlighted {
+    background-color: #f5f5f5;
+  }
 
-.zotero-dropdown-item.selected {
-  background-color: #0078d7;
-  color: white;
-}
+  &.selected {
+    background-color: #0078d7;
+    color: white;
 
-.zotero-dropdown-item.selected .zotero-result-meta {
-  color: #e6f3ff;
+    & .zotero-result-meta {
+      color: #e6f3ff;
+    }
+  }
+
+  & .zotero-result-meta {
+    color: #666;
+  }
 }
 
 .zotero-dropdown-loading,
@@ -408,10 +412,6 @@ b {
   color: #666;
   font-style: italic;
   text-align: left;
-}
-
-.zotero-dropdown-item .zotero-result-meta {
-  color: #666;
 }
 
 /* Settings Panel Styles */
@@ -427,14 +427,14 @@ b {
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-}
 
-.zotero-settings-panel[hidden] {
-  display: none !important;
-}
+  &[hidden] {
+    display: none !important;
+  }
 
-.zotero-settings-panel .ms-welcome__header {
-  flex-shrink: 0;
+  & .ms-welcome__header {
+    flex-shrink: 0;
+  }
 }
 
 .settings-content {
@@ -465,15 +465,15 @@ b {
   box-sizing: border-box;
   transition: border-color 0.2s;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-}
 
-.form-input:focus {
-  outline: none;
-  border-color: #0078d4;
-}
+  &:focus {
+    outline: none;
+    border-color: #0078d4;
+  }
 
-.form-input[type="password"] {
-  font-family: "Courier New", monospace;
+  &[type="password"] {
+    font-family: "Courier New", monospace;
+  }
 }
 
 .form-select {
@@ -485,11 +485,11 @@ b {
   box-sizing: border-box;
   transition: border-color 0.2s;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-}
 
-.form-select:focus {
-  outline: none;
-  border-color: #0078d4;
+  &:focus {
+    outline: none;
+    border-color: #0078d4;
+  }
 }
 
 textarea.form-input {
@@ -501,15 +501,15 @@ textarea.form-input {
   font-size: 12px;
   color: #605e5c;
   margin-top: 4px;
-}
 
-.help-text a {
-  color: #0078d4;
-  text-decoration: none;
-}
+  & a {
+    color: #0078d4;
+    text-decoration: none;
 
-.help-text a:hover {
-  text-decoration: underline;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
 }
 
 .error-message {
@@ -517,10 +517,10 @@ textarea.form-input {
   font-size: 12px;
   margin-top: 4px;
   display: none;
-}
 
-.error-message.error-visible {
-  display: block;
+  &.error-visible {
+    display: block;
+  }
 }
 
 .button-group {
@@ -536,23 +536,24 @@ textarea.form-input {
 .zotero-main-content {
   display: block;
 }
+
 /* Button Styles */
 .zotero-button-primary {
   background-color: #0078d4;
   color: white;
   border: none;
-}
 
-.zotero-button-primary:hover {
-  background-color: #106ebe;
+  &:hover {
+    background-color: #106ebe;
+  }
 }
 
 .zotero-button-secondary {
   background-color: #f3f2f1;
   color: #323130;
   border: 1px solid #8a8886;
-}
 
-.zotero-button-secondary:hover {
-  background-color: #edebe9;
+  &:hover {
+    background-color: #edebe9;
+  }
 }
