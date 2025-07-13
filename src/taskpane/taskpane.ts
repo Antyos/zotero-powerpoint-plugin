@@ -41,33 +41,23 @@ function initializeZoteroUI() {
   // Load existing configuration
   zotero.loadConfig();
 
-  // Set up event listeners
-  const configureButton = document.getElementById("configure-zotero");
-  const refreshCitationsButton = document.getElementById("refresh-citations");
-  const insertMockCitationButton = document.getElementById("insert-mock-citation");
-  const searchInput = document.getElementById("search-query");
-  const debugSlideTagsButton = document.getElementById("debug-slide-tags");
-  const debugCitationStoreButton = document.getElementById("debug-citation-store");
-  const debugCitationsButton = document.getElementById("debug-citations");
-  const clearCitationStoreButton = document.getElementById("clear-citation-store");
-
   // Settings panel elements
-  const closeSettingsButton = document.getElementById("close-settings");
-  const settingsForm = document.getElementById("settings-form");
-  const settingsCancelButton = document.getElementById("settings-cancel");
-
+  const configureButton = document.getElementById("configure-zotero");
   if (configureButton) {
-    configureButton.onclick = showSettingsPanel;
+    configureButton.onclick = () => showSettingsPanel(true);
   }
 
+  const closeSettingsButton = document.getElementById("close-settings");
   if (closeSettingsButton) {
     closeSettingsButton.onclick = hideSettingsPanel;
   }
 
+  const settingsForm = document.getElementById("settings-form");
   if (settingsForm) {
     settingsForm.onsubmit = handleSettingsSubmit;
   }
 
+  const settingsCancelButton = document.getElementById("settings-cancel");
   if (settingsCancelButton) {
     settingsCancelButton.onclick = hideSettingsPanel;
   }
@@ -75,10 +65,12 @@ function initializeZoteroUI() {
   // Set up live JSON validation for citation formats
   setupCitationFormatsValidation();
 
+  const refreshCitationsButton = document.getElementById("refresh-citations");
   if (refreshCitationsButton) {
     refreshCitationsButton.onclick = () => updateCitationsPanel(true);
   }
 
+  const debugSlideTagsButton = document.getElementById("debug-slide-tags");
   if (debugSlideTagsButton) {
     debugSlideTagsButton.onclick = () => {
       debugSlideTags().catch((error) => {
@@ -87,6 +79,7 @@ function initializeZoteroUI() {
     };
   }
 
+  const debugCitationsButton = document.getElementById("debug-citations");
   if (debugCitationsButton) {
     debugCitationsButton.onclick = async () => {
       try {
@@ -98,6 +91,7 @@ function initializeZoteroUI() {
     };
   }
 
+  const debugCitationStoreButton = document.getElementById("debug-citation-store");
   if (debugCitationStoreButton) {
     debugCitationStoreButton.onclick = () => {
       console.log("Debugging citation store...");
@@ -105,6 +99,7 @@ function initializeZoteroUI() {
     };
   }
 
+  const insertMockCitationButton = document.getElementById("insert-mock-citation");
   if (insertMockCitationButton) {
     insertMockCitationButton.onclick = () => {
       insertCitation({
@@ -123,6 +118,7 @@ function initializeZoteroUI() {
     };
   }
 
+  const clearCitationStoreButton = document.getElementById("clear-citation-store");
   if (clearCitationStoreButton) {
     clearCitationStoreButton.onclick = async () => {
       try {
@@ -137,6 +133,7 @@ function initializeZoteroUI() {
     };
   }
 
+  const searchInput = document.getElementById("search-query");
   if (searchInput) {
     // Debounced search as user types
     let searchTimeout: ReturnType<typeof setTimeout>;
@@ -184,6 +181,7 @@ function initializeZoteroUI() {
           selectedIndex = Math.max(selectedIndex - 1, -1);
           updateSearchDropdownSelection();
           break;
+        case "Tab":
         case "Enter":
           e.preventDefault();
           if (selectedIndex >= 0 && selectedIndex < searchResults.length) {
@@ -214,7 +212,7 @@ function initializeZoteroUI() {
     };
 
     // Update dropdown selection highlighting
-    function updateSearchDropdownSelection() {
+    const updateSearchDropdownSelection = () => {
       const items = document.querySelectorAll(".zotero-dropdown-item");
       items.forEach((item, index) => {
         if (index === selectedIndex) {
@@ -229,15 +227,15 @@ function initializeZoteroUI() {
           item.classList.remove("selected");
         }
       });
-    }
+    };
 
     // Select a citation and close dropdown
-    function selectCitation(citation: ZoteroItemData) {
+    const selectCitation = (citation: ZoteroItemData) => {
       insertCitation(citation);
       hideSearchDropdown();
       (searchInput as HTMLInputElement).value = "";
       selectedIndex = -1;
-    }
+    };
 
     // Make selectCitation available globally for click handlers
     (window as any).selectCitation = selectCitation;
@@ -247,47 +245,29 @@ function initializeZoteroUI() {
   updateCitationsPanel(false);
 }
 
-function showSettingsPanel() {
+function showSettingsPanel(show: boolean = true) {
+  const showOrHide: string = show ? "Showing" : "Hiding";
   try {
-    console.log("Showing settings panel...");
-
+    console.debug(`${showOrHide} settings panel...`);
     // Load current configuration into the form
-    loadCurrentSettingsConfig();
-
-    // Show settings panel and hide main content
-    const settingsPanel = document.getElementById("settings-panel");
-    const mainContent = document.getElementById("main-content");
-
-    if (settingsPanel) {
-      settingsPanel.hidden = false;
+    if (show) {
+      loadCurrentSettingsConfig();
     }
-
+    const settingsPanel = document.getElementById("settings-panel");
+    if (settingsPanel) {
+      settingsPanel.hidden = !show;
+    }
+    const mainContent = document.getElementById("main-content");
     if (mainContent) {
-      mainContent.hidden = true;
+      mainContent.hidden = show;
     }
   } catch (error) {
-    console.error("Error showing settings panel:", error);
+    console.error(`Error ${showOrHide.toLowerCase()} settings panel:`, error);
   }
 }
 
 function hideSettingsPanel() {
-  try {
-    console.log("Hiding settings panel...");
-
-    // Hide settings panel and show main content
-    const settingsPanel = document.getElementById("settings-panel");
-    const mainContent = document.getElementById("main-content");
-
-    if (settingsPanel) {
-      settingsPanel.hidden = true;
-    }
-
-    if (mainContent) {
-      mainContent.hidden = false;
-    }
-  } catch (error) {
-    console.error("Error hiding settings panel:", error);
-  }
+  return showSettingsPanel(false);
 }
 
 function loadCurrentSettingsConfig() {
@@ -429,7 +409,6 @@ async function handleSettingsSubmit(event: Event) {
 
     console.log("Configuration saved successfully!");
 
-    // Hide settings panel
     hideSettingsPanel();
   } catch (error) {
     console.error("Error saving settings:", error);
@@ -482,7 +461,7 @@ async function searchZoteroLibrary() {
 function showSearchDropdown() {
   const dropdown = document.getElementById("search-dropdown");
   if (dropdown) {
-    console.log("Showing search dropdown");
+    console.debug("Showing search dropdown");
     dropdown.hidden = false;
   } else {
     console.error("Search dropdown element not found");
@@ -492,7 +471,7 @@ function showSearchDropdown() {
 function hideSearchDropdown() {
   const dropdown = document.getElementById("search-dropdown");
   if (dropdown) {
-    console.log("Hiding search dropdown");
+    console.debug("Hiding search dropdown");
     dropdown.hidden = true;
   }
 }
@@ -504,7 +483,7 @@ function displaySearchResults(results: ZoteroItemData[]) {
     return;
   }
 
-  console.log(`Displaying ${results.length} search results`);
+  console.debug(`Displaying ${results.length} search results`);
 
   // Store results for keyboard navigation
   if (typeof (window as any).setSearchResults === "function") {
@@ -560,30 +539,27 @@ async function insertCitation(citation: ZoteroItemData) {
 // Global function for citation removal (called from HTML onclick)
 async function removeCitation(citationId: string) {
   try {
-    console.log(`Removing citation: ${citationId}`);
-
     const success = await removeCitationFromSlide(citationId);
-
     if (success) {
-      console.log("Citation removed successfully");
+      console.log(`Removed citation: ${citationId}`);
       // Refresh the current citations list
       setTimeout(updateCitationsPanel, 500);
     } else {
-      console.warn("Citation not found for removal");
+      console.warn(`Could not find citation ${citationId} for removal.`);
     }
   } catch (error) {
-    console.error("Citation removal error:", error);
+    console.error(`Failed to remove citation ${citationId}:`, error);
   }
 }
 (window as any).removeCitation = removeCitation;
 
 async function updateCitationsPanel(updateSlide: boolean = true) {
   try {
-    console.log("Loading current citations from slide...");
+    console.debug("updateCitationsPanel(): Loading current citations from slide...");
     await PowerPoint.run(async (context) => {
       const citations = await getCitationsOnSlide();
-      console.log(`Found ${citations.length} citations in current slide.`);
-      console.log(citations);
+      console.debug(`Found ${citations.length} citations in current slide.`);
+      console.debug(citations);
       displayCitationsOnTaskpane(citations);
       if (updateSlide) {
         const slide = await getCurrentSlide(context);
@@ -599,7 +575,9 @@ async function updateCitationsPanel(updateSlide: boolean = true) {
 
 function displayCitationsOnTaskpane(citations: ZoteroItemData[]) {
   const citationsContainer = document.getElementById("current-citations");
-  if (!citationsContainer) return;
+  if (!citationsContainer) {
+    return;
+  }
 
   if (citations.length === 0) {
     citationsContainer.innerHTML =
@@ -744,7 +722,7 @@ function setupCitationDragAndDrop(citations: ZoteroItemData[]) {
 
 async function reorderCitations(citations: ZoteroItemData[], fromIndex: number, toIndex: number) {
   try {
-    console.log(`Reordering citation from index ${fromIndex} to ${toIndex}`);
+    console.debug(`Reordering citation from index ${fromIndex} to ${toIndex}`);
 
     // Create new array with reordered citations
     const reorderedCitations = [...citations];
@@ -768,10 +746,7 @@ async function updateCitationOrder(reorderedCitations: ZoteroItemData[]) {
 
     // Update the citation key order on the slide
     await updateCitationKeysOrder(orderedKeys);
-
-    console.log("Citation order updated successfully:", orderedKeys);
-
-    // Refresh the display to reflect the new order
+    console.debug("Citation order updated successfully:", orderedKeys);
     await updateCitationsPanel();
   } catch (error) {
     console.error("Failed to update citation order:", error);
@@ -783,18 +758,18 @@ async function updateCitationOrder(reorderedCitations: ZoteroItemData[]) {
 async function showRecentCitations() {
   try {
     const citationStore = CitationStore.getInstance();
-
     // Use the new getLast method to get the 5 most recently added citations
     const recentCitations = await citationStore.getRecent(5);
 
     const resultsContainer = document.getElementById("search-results");
-    if (!resultsContainer) return;
+    if (!resultsContainer) {
+      return;
+    }
 
     // Store results for keyboard navigation
     if (typeof (window as any).setSearchResults === "function") {
       (window as any).setSearchResults(recentCitations);
     }
-
     if (recentCitations.length === 0) {
       resultsContainer.innerHTML = '<div class="zotero-dropdown-empty">No recent citations.</div>';
       showSearchDropdown();
@@ -878,7 +853,9 @@ function validateCitationFormats(
     // If empty, that's okay - just clear the dropdown
     if (!formatsText.trim()) {
       populateSettingsCitationFormatOptions({});
-      if (saveButton) saveButton.disabled = false;
+      if (saveButton) {
+        saveButton.disabled = false;
+      }
       return true;
     }
 
@@ -908,7 +885,9 @@ function validateCitationFormats(
 
     // If everything is valid, update the dropdown and enable save button
     populateSettingsCitationFormatOptions(formatsJson);
-    if (saveButton) saveButton.disabled = false;
+    if (saveButton) {
+      saveButton.disabled = false;
+    }
     return true;
   } catch (error) {
     // Show error message
@@ -918,7 +897,9 @@ function validateCitationFormats(
 
     // Clear the dropdown and disable save button on error
     populateSettingsCitationFormatOptions({});
-    if (saveButton) saveButton.disabled = true;
+    if (saveButton) {
+      saveButton.disabled = true;
+    }
     return false;
   }
 }
