@@ -3,13 +3,7 @@
  * Based on obsidian-zotero-integration BBT implementation
  */
 
-import api, {
-  SingleReadResponse,
-  MultiReadResponse,
-  ZoteroApi,
-  RequestOptions,
-  ZoteroItemData,
-} from "zotero-api-client";
+import api, { ZoteroApi, RequestOptions, ZoteroItemData } from "zotero-api-client";
 
 export interface ZoteroField {
   id: string;
@@ -248,30 +242,7 @@ export class ZoteroLibrary {
     return true;
   }
 
-  public async getItems(opts?: RequestOptions): Promise<ZoteroField[]> {
-    try {
-      const response = await ZoteroLibrary.getClient().items().get(opts);
-      const itemData = this.isSingleResponse(response) ? [response.getData()] : response.getData();
-      console.log("Fetched Zotero items:", itemData);
-      return itemData.map((item) => ({
-        id: item.key,
-        citationKey: item.data?.extra || "",
-        formattedText: item.data?.title || "",
-        shapeId: "",
-      }));
-    } catch (error) {
-      console.error("Error getting Zotero items:", error);
-      throw new Error(`Failed to get items: ${error}`);
-    }
-  }
-
-  private isSingleResponse(
-    response: SingleReadResponse | MultiReadResponse
-  ): response is SingleReadResponse {
-    return response.getResponseType() === "SingleReadResponse";
-  }
-
-  public async quickSearch(
+  public async searchItems(
     query: string,
     maxResults?: number,
     opts?: RequestOptions
@@ -281,7 +252,7 @@ export class ZoteroLibrary {
       const response = await ZoteroLibrary.getClient()
         .items()
         .get({ ...opts, q: query, itemType: "-attachment", limit: limit });
-      const itemData = this.isSingleResponse(response) ? [response.getData()] : response.getData();
+      const itemData = response.getData();
       console.log("Quick search results:", itemData);
       if (!itemData || itemData.length === 0) {
         return [];

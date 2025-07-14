@@ -80,20 +80,12 @@ declare module "zotero-api-client" {
     [key: string]: any; // Allow for additional item type specific fields
   }
 
-  /**
-   * Zotero Item Type
-   */
-  export interface ZoteroItemRawResponse {
+  export interface ZoteroRawResponse<T> {
     version: number;
     key: string;
-    data: Array<ZoteroItemData & { version: number }>;
+    data: Array<T & { version: number }>;
     library: ZoteroLibrary;
-    links: {
-      alternate: ZoteroLink;
-      attachment?: ZoteroLink;
-      self?: ZoteroLink;
-      [key: string]: ZoteroLink | undefined;
-    };
+    links: Record<string, ZoteroLink>;
     meta: {
       createdByUser?: {
         id: number;
@@ -106,6 +98,11 @@ declare module "zotero-api-client" {
       [key: string]: unknown;
     };
   }
+
+  /**
+   * Zotero Item Type
+   */
+  export type ZoteroItemRawResponse = ZoteroRawResponse<ZoteroItemData>;
 
   /**
    * Zotero Collection
@@ -238,9 +235,9 @@ declare module "zotero-api-client" {
   /**
    * Single Read Response
    */
-  export interface SingleReadResponse<R = unknown, T = unknown> extends ApiResponse {
+  export interface SingleReadResponse<T = unknown> extends ApiResponse {
     options: RequestOptions;
-    raw: R;
+    raw: ZoteroRawResponse<T>;
     response: Response;
     getResponseType(): "SingleReadResponse";
     getData(): T;
@@ -249,9 +246,9 @@ declare module "zotero-api-client" {
   /**
    * Multi Read Response
    */
-  export interface MultiReadResponse<R = unknown, T = unknown> extends ApiResponse {
+  export interface MultiReadResponse<T = unknown> extends ApiResponse {
     options: RequestOptions;
-    raw: Array<R>;
+    raw: ZoteroRawResponse<Array<T>>;
     response: Response;
     getResponseType(): "MultiReadResponse";
     getData(): T[];
@@ -454,14 +451,16 @@ declare module "zotero-api-client" {
   /**
    * Main API Interface
    */
-  export interface ZoteroApi<R = unknown, T = unknown> {
+  export interface ZoteroApi<T = unknown, IsMultiResponse extends boolean = true> {
     // Configuration Methods
     (key?: string, opts?: RequestOptions): ZoteroApi;
     library(typeOrKey?: "user" | "group" | string, id?: number): ZoteroApi;
 
     // Resource Methods
     // If key is provided, returns a single item response, otherswise returns a multi-item response
-    items(itemKey?: string): ZoteroApi<ZoteroItemRawResponse, ZoteroItemData>;
+    items(itemKey: string): ZoteroApi<ZoteroItemData, false>;
+    items(itemKey: undefined): ZoteroApi<ZoteroItemData, true>;
+    items(itemKey?: string): ZoteroApi<ZoteroItemData, true>;
     collections(collectionKey?: string): ZoteroApi<ZoteroCollection>;
     subcollections(): ZoteroApi<ZoteroCollection>;
     searches(searchKey?: string): ZoteroApi<ZoteroSearch>;
@@ -509,7 +508,9 @@ declare module "zotero-api-client" {
     use(extend: (api: ZoteroApi) => ZoteroApi): ZoteroApi;
 
     // Execution Methods
-    get(opts?: RequestOptions): Promise<SingleReadResponse<R, T> | MultiReadResponse<R, T>>;
+    get(
+      opts?: RequestOptions
+    ): Promise<IsMultiResponse extends true ? MultiReadResponse<T> : SingleReadResponse<T>>;
     post(data: any[], opts?: RequestOptions): Promise<MultiWriteResponse<T>>;
     put(data: any, opts?: RequestOptions): Promise<SingleWriteResponse<T>>;
     patch(data: any, opts?: RequestOptions): Promise<SingleWriteResponse<T>>;

@@ -448,7 +448,7 @@ async function searchZoteroLibrary() {
       return;
     }
 
-    const results = await zotero.quickSearch(query);
+    const results = await zotero.searchItems(query);
     displaySearchResults(results);
     console.log(`Search completed. Found ${results.length} items.`);
   } catch (error) {
