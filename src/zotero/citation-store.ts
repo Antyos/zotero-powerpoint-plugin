@@ -117,7 +117,7 @@ export class CitationStore {
   public async getOrCreateCustomXmlPart(
     context: PowerPoint.RequestContext
   ): Promise<PowerPoint.CustomXmlPart> {
-    const customXmlParts = context.presentation.customXmlParts;
+    const { customXmlParts } = context.presentation;
     // await debugXmlParts(context, customXmlParts);
     customXmlParts.load("items");
     await context.sync();
@@ -135,8 +135,7 @@ export class CitationStore {
     }
     // If no existing part, create a new one
     const xmlString = `<?xml version="1.0" encoding="UTF-8"?><${this.xmlPartId} xmlns="${CITATION_XML_NAMESPACE}"></${this.xmlPartId}>`;
-    const newPart = customXmlParts.add(xmlString);
-    return newPart;
+    return customXmlParts.add(xmlString);
   }
 
   /**
@@ -276,7 +275,7 @@ export class CitationStore {
    */
   public async debugXml(): Promise<void> {
     await PowerPoint.run(async (context) => {
-      const customXmlParts = context.presentation.customXmlParts;
+      const { customXmlParts } = context.presentation;
       await debugXmlParts(context, customXmlParts);
     });
   }
@@ -334,7 +333,7 @@ export class CitationStore {
    */
   public async prune(): Promise<number> {
     return await PowerPoint.run(async (context) => {
-      const slides = context.presentation.slides;
+      const { slides } = context.presentation;
       const usedKeys = new Set<string>();
       slides.load("items/tags");
       await context.sync();

@@ -21,7 +21,9 @@ const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
  * Check if cached data is still valid
  */
 function isCacheValid(): boolean {
-  if (!cacheTimestamp) return false;
+  if (!cacheTimestamp) {
+    return false;
+  }
   const now = Date.now();
   return now - cacheTimestamp < CACHE_DURATION;
 }

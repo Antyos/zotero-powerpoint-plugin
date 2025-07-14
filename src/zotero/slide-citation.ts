@@ -63,7 +63,7 @@ async function getCitationTextBox(
   citationBoxName: string = "Citations",
   createIfMissing: boolean = true
 ): Promise<PowerPoint.Shape | null> {
-  const shapes = slide.shapes;
+  const { shapes } = slide;
   shapes.load("items");
   await slide.context.sync();
 
@@ -390,7 +390,7 @@ export async function addCitationKeyToSlide(
   slide?: PowerPoint.Slide
 ): Promise<void> {
   slide = slide ?? (await getCurrentSlide());
-  const context = slide.context;
+  const { context } = slide;
   const citationKeys = await getCitationKeysOnSlide(slide);
   if (!citationKeys.includes(citationKey)) {
     citationKeys.push(citationKey);
@@ -408,7 +408,7 @@ export async function removeCitationFromSlide(
 ): Promise<boolean> {
   try {
     slide = slide ?? (await getCurrentSlide());
-    const context = slide.context;
+    const { context } = slide;
     const citationKeys = await getCitationKeysOnSlide(slide);
     if (!citationKeys.includes(citationKey)) {
       return false;
@@ -452,8 +452,7 @@ export async function getCitationKeysOnSlide(slide?: PowerPoint.Slide): Promise<
     slide = await getCurrentSlide();
   }
   // Having a separate variable for context makes TypeScript happy
-  const context = slide.context;
-  const tags = slide.tags;
+  const { context, tags } = slide;
   await context.sync();
   // console.log(`Slide Tags: ${JSON.stringify(tags, null, 2)}`);
   const citationTag = tags.getItemOrNullObject(CITATION_TAG_KEY);
@@ -482,10 +481,8 @@ export async function updateCitationKeysOrder(
     slide = await getCurrentSlide();
   }
 
-  const context = slide.context;
-  const tags = slide.tags;
+  const { context, tags } = slide;
   await context.sync();
-
   // Update the citation tag with the new order
   tags.add(CITATION_TAG_KEY, orderedKeys.join(","));
   await context.sync();
